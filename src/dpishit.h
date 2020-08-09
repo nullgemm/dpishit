@@ -30,6 +30,12 @@ struct dpishit_win_info
 #endif
 
 #ifdef DPISHIT_OSX
+#include <objc/runtime.h>
+
+struct dpishit_osx_info
+{
+	id osx_win;
+};
 #endif
 
 // common structs
@@ -46,12 +52,19 @@ struct dpishit_display_info
 
 struct dpishit
 {
+#ifdef DPISHIT_WAYLAND
+#endif
+
 #ifdef DPISHIT_X11
 	struct dpishit_x11_info x11_info;
 #endif
 
 #ifdef DPISHIT_WIN
 	struct dpishit_win_info win_info;
+#endif
+
+#ifdef DPISHIT_OSX
+	struct dpishit_osx_info osx_info;
 #endif
 
 	struct dpishit_display_info display_info;
