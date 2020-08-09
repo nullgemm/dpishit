@@ -11,17 +11,22 @@ Windows and OS X. DPIshit can find or compute the following values:
 
 
 ## Linking
-For Linux/X11 you must link with RandR and xcb-util-xrm:
+For Linux/X11 you must link with XCB, RandR and xcb-util-xrm:
 ```
--lxcb-randr -lxcb-xrm
+-lxcb -lxcb-randr -lxcb-xrm
 ```
 
 For Linux/Wayland you must link with libwayland-client:
 ```
 ```
 
-Under Windows you must link with GDI and:
+Under Windows you must link with `windows`, `GDI` and `Shcore`.
 ```
+-mwindows -lgdi32 -lshcore
+```
+It is also necessary to set the `NTDDI_VERSION` to `NTDDI_WINBLUE`.
+```
+-DNTDDI_VERSION=NTDDI_WINBLUE
 ```
 
 Under OS X you must link with:
@@ -35,8 +40,8 @@ Under OS X you must link with:
 ### Density information APIs feature matrix
 ```
                 +---------------+---------------+---------------+---------------+
-                | EDID dumped   | logic/system  | real/physical | scaling       |
-                | by system     | density       | density       | value         |
+                | EDID dumped   | logic         | physical      | scaling       |
+                | by system     | density       | res. and size | settings      |
 +---------------|---------------+---------------+---------------+---------------+
 | Windows       | yes, registry | yes           | yes           | yes           |
 |---------------|---------------+---------------+---------------+---------------+
@@ -91,30 +96,29 @@ When using Wayland however, it is a better idea to just catch the
 
 ### Windows
 #### EDID dump accessibility
-The EDID dump is stored in the registry and can be accessed through the
+A system EDID dump is stored in the registry and can be accessed with the
 [setup API](https://docs.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdiopendevregkey).
+This might require admin privileges, especially on school and office computers...
 
-#### Physical density info
-The physical pixel density can be retrieved for a specific monitor using
-[GetDpiForMonitor](https://docs.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getdpiformonitor)
-and requesting
-[MDT_RAW_DPI](https://docs.microsoft.com/en-us/windows/win32/api/shellscalingapi/ne-shellscalingapi-monitor_dpi_type).
-It is also possible to use GDI to get this information, with
+#### Physical resolution and size
+Physical-ish resolution and size values are availabe through GDI's
 [GetDeviceCaps](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getdevicecaps).
+The physical pixel density can also be retrieved for a specific monitor using
+[GetDpiForMonitor](https://docs.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getdpiformonitor).
 
-#### System density info
-The Window logical pixel density can be retrieved with
-[GetDpiForWindow](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforwindow),
-provided the application was configured as
-[DPI-aware](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setthreaddpiawarenesscontext).
-It is also possible to use GDI to get this information, with
+#### Logic density
+Again, this value can be retrieved using GDI with
 [GetDeviceCaps](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getdevicecaps).
+It is also possible to use new APIs if the application executes on a
+[DPI-aware thread](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setthreaddpiawarenesscontext).
+In this case, a DPI value can be obtained for the window using
+[GetDpiForWindow](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforwindow).
 
 #### Scaling settings
-To enable dynamic scaling, using the
-[dedicated API](https://docs.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getscalefactorformonitor)
-is mandatory, but scaling the window frame is optional and
-[must be asked explicitly](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enablenonclientdpiscaling).
+The user-set scaling factor is available from
+[GetScaleFactorForMonitor](https://docs.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-getscalefactorformonitor).
+It is also possible to enable automatic window frame scaling with
+[EnableNonClientDpiScaling](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enablenonclientdpiscaling).
 
 
 

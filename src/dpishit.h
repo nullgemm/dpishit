@@ -19,7 +19,14 @@ struct dpishit_x11_info
 };
 #endif
 
-#ifdef DPISHIT_WINDOWS
+#ifdef DPISHIT_WIN
+#include <windows.h>
+
+struct dpishit_win_info
+{
+	HDC win_hdc;
+	HWND win_hwnd;
+};
 #endif
 
 #ifdef DPISHIT_OSX
@@ -42,6 +49,11 @@ struct dpishit
 #ifdef DPISHIT_X11
 	struct dpishit_x11_info x11_info;
 #endif
+
+#ifdef DPISHIT_WIN
+	struct dpishit_win_info win_info;
+#endif
+
 	struct dpishit_display_info display_info;
 };
 
