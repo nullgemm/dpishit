@@ -20,17 +20,18 @@ For Linux/Wayland you must link with libwayland-client:
 ```
 ```
 
-Under Windows you must link with `windows`, `GDI` and `Shcore`.
+Under Windows you must link with `windows`, `GDI` and `Shcore`:
 ```
 -mwindows -lgdi32 -lshcore
 ```
-It is also necessary to set the `NTDDI_VERSION` to `NTDDI_WINBLUE`.
+It is also necessary to set the `NTDDI_VERSION` to `NTDDI_WINBLUE`:
 ```
 -DNTDDI_VERSION=NTDDI_WINBLUE
 ```
 
-Under OS X you must link with:
+Under OS X you must link with `AppKit`:
 ```
+-framework AppKit
 ```
 
 
@@ -124,28 +125,27 @@ It is also possible to enable automatic window frame scaling with
 
 ### Mac OS
 #### EDID dump accessibility
-The EDID dump is stored as `IODisplayEDID` in the `AppleDisplay` class of the
-IORegistry. It can be found using the command `ioreg -l | grep EDID`, but can
-be retrieved programmatically using the functions
-[documented by apple](https://developer.apple.com/documentation/kernel/iokit_fundamentals/registry_utilities?language=occ)
+A system EDID dump is stored as `IODisplayEDID` in the `AppleDisplay` class of
+the IORegistry, which can be printed with a simple `ioreg -l | grep EDID`.
+It is possible to access these entries using the
+[registry utilities](https://developer.apple.com/documentation/kernel/iokit_fundamentals/registry_utilities?language=occ).
 
-#### Physical density info
-The display's physical density is computed directly from the EDID values.
-It is returned by the `CGDisplayScreenSize` function, taking the display as parameter.
+#### Physical resolution and size
+The physical size of the display is computed directly form the EDID values and
+returned by [CGDisplayScreenSize](https://developer.apple.com/documentation/coregraphics/1456599-cgdisplayscreensize).
+This value is completely made up when the EDID does not provide enough info,
+which can happen when the display is too old, if the manufaturer didn't care or
+simply because density does not make sense for the device (like for projectors).
+The returned density is then arbitrarily set to 2.835 px/mm (72 dpi) by Apple.
 
-Beware, Apple fakes this value if the EDID it gets does not provide enough info.
-This can happen when the display device is too old or when density doesn't make
-sense, like in projectors. Sometimes the manufacturer simply didn't care.
-Whatever the reason, in this case the returned density is 2.835 px/mm (72 dpi),
-as explained in the [official documentation](https://developer.apple.com/documentation/coregraphics/1456599-cgdisplayscreensize)
+The physical resolution is available from the *interestingly* named
+[CGDisplayPixelsWide](https://developer.apple.com/documentation/coregraphics/1456361-cgdisplaypixelswide?language=objc)
+and
+[CGDisplayPixelsHigh](https://developer.apple.com/documentation/coregraphics/1454247-cgdisplaypixelshigh?language=objc).
 
-#### System density info
-Mac OS only provides one density value, primarily based on the active resolution
-and the physical display size as advertised by the EDID. Because this information
-is faked when not available, Mac OS does not need another density value.
+#### Logic density
+OS X does not provide a logic density value.
 
 #### Scaling settings
-Mac OS supposedly provides every widget needed to build UIs, so the scaling
-is done internally and its value is not easily available.
-However, there is a [function](https://developer.apple.com/documentation/appkit/nsfont/1531931-systemfontsize?language=objc)
-in AppKit which returns the system font size. It can be used as an alternative.
+OS X does not provide a scaling setting, but it does provide a system font size
+we can twist very easily once retrieved using [systemFontSize](https://developer.apple.com/documentation/appkit/nsfont/1531931-systemfontsize?language=objc).
