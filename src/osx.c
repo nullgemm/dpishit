@@ -143,7 +143,6 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	memset(dpishit, 0, sizeof (struct dpishit));
 	dpishit->osx_info = *((struct dpishit_osx_info*) display_system_info);
 }
 

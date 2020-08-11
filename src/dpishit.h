@@ -4,9 +4,29 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// common structs
+
+struct dpishit_display_info
+{
+	uint16_t px_width;
+	uint16_t px_height;
+	uint16_t mm_width;
+	uint16_t mm_height;
+	double dpi_logic;
+	double scale;
+};
+
 // platform structs
 
 #ifdef DPISHIT_WAYLAND
+#include <wayland-client.h>
+#include <pthread.h>
+
+struct dpishit_wayland_info
+{
+	pthread_mutex_t wayland_info_mutex;
+	struct dpishit_display_info display_info_copy;
+};
 #endif
 
 #ifdef DPISHIT_X11
@@ -38,21 +58,12 @@ struct dpishit_osx_info
 };
 #endif
 
-// common structs
-
-struct dpishit_display_info
-{
-	uint16_t px_width;
-	uint16_t px_height;
-	uint16_t mm_width;
-	uint16_t mm_height;
-	double dpi_logic;
-	double scale;
-};
+// public API
 
 struct dpishit
 {
 #ifdef DPISHIT_WAYLAND
+	struct dpishit_wayland_info wl_info;
 #endif
 
 #ifdef DPISHIT_X11
@@ -70,8 +81,6 @@ struct dpishit
 	struct dpishit_display_info display_info;
 };
 
-// public API
-
 bool dpishit_refresh_scale(
 	struct dpishit* dpishit);
 
@@ -87,5 +96,33 @@ void dpishit_init(
 
 struct dpishit_display_info* dpishit_get_display_info(
 	struct dpishit* dpishit);
+
+#ifdef DPISHIT_WAYLAND
+// callback
+void dpishit_wl_geometry(
+	void*,
+	struct wl_output*,
+	int32_t,
+	int32_t,
+	int32_t,
+	int32_t,
+	int32_t,
+	const char*,
+	const char*,
+	int32_t);
+
+void dpishit_wl_mode(
+	void*,
+	struct wl_output*,
+	uint32_t,
+	int32_t,
+	int32_t,
+	int32_t);
+
+void dpishit_wl_scale(
+	void*,
+	struct wl_output*,
+	int32_t);
+#endif
 
 #endif

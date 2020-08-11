@@ -255,7 +255,6 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	memset(dpishit, 0, sizeof (struct dpishit));
 	dpishit->x11_info = *((struct dpishit_x11_info*) display_system_info);
 }
 

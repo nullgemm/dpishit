@@ -164,7 +164,6 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	memset(dpishit, 0, sizeof (struct dpishit));
 	dpishit->win_info = *((struct dpishit_win_info*) display_system_info);
 }
 
