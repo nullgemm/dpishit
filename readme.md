@@ -1,10 +1,9 @@
 # Dpishit
 Dpishit is a simple portable library for accessing pixel-density information.
 It can be used to build cross-platform DPI-aware apps for Linux (X11/Wayland),
-Windows and OS X. DPIshit can find or compute the following values:
+Windows and OS X. Dpishit can find or compute the following values:
  - Physical display resolution (px)
  - Physical display size (mm)
- - Active display resolution (px)
  - Logic display density (dpi)
  - Scale
 
