@@ -16,8 +16,9 @@ For Linux/X11 you must link with XCB, RandR and xcb-util-xrm:
 -lxcb -lxcb-randr -lxcb-xrm
 ```
 
-For Linux/Wayland you must link with libwayland-client:
+For Linux/Wayland you must link with libwayland-client and pthread:
 ```
+-lwayland-client -lpthread
 ```
 
 Under Windows you must link with `windows`, `GDI` and `Shcore`:
@@ -149,3 +150,8 @@ OS X does not provide a logic density value.
 #### Scaling settings
 OS X does not provide a scaling setting, but it does provide a system font size
 we can twist very easily once retrieved using [systemFontSize](https://developer.apple.com/documentation/appkit/nsfont/1531931-systemfontsize?language=objc).
+
+
+
+## Greetings
+Fueled by Klaus Shulze albums \m/
