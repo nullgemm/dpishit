@@ -1,10 +1,11 @@
 #include "dpishit.h"
+#include "nix.h"
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <xcb/randr.h>
 
-#if !defined(DPISHIT_NO_HACK_X11_SCALE_XFT) || !defined(DPISHIT_NO_HACK_X11_LOGIC_DPI_XFT)
+#if !defined(DPISHIT_NO_HACK_SCALE_XFT) || !defined(DPISHIT_NO_HACK_LOGIC_DPI_XFT)
 	#include <xcb/xcb_xrm.h>
 
 	static bool dpishit_xresources_xft_double(
@@ -56,57 +57,12 @@
 	}
 #endif
 
-#if !defined(DPISHIT_NO_HACK_X11_LOGIC_DPI_ENV) || !defined(DPISHIT_NO_HACK_X11_SCALE_ENV)
-	static int dpishit_env_double(
-		struct dpishit* dpishit,
-		char** env,
-		int count,
-		double* out)
-	{
-		char* scale_str;
-		int i = 0;
-
-		// try all given environment variables until one is valid
-		do
-		{
-			scale_str = getenv(env[i]);
-
-			if (scale_str != NULL)
-			{
-				break;
-			}
-
-			++i;
-		}
-		while (i < count);
-		
-		// no environment variable was found
-		if (scale_str == NULL)
-		{
-			return -1;
-		}
-
-		// parse environment variable
-		char* endptr;
-		double scale_num = strtod(scale_str, &endptr);
-
-		if ((*endptr != '\0') || (endptr == scale_str))
-		{
-			return -1;
-		}
-
-		*out = scale_num;
-
-		return i;
-	}
-#endif
-
 bool dpishit_refresh_scale(
 	struct dpishit* dpishit)
 {
 	bool ret = true;
 
-#ifndef DPISHIT_NO_HACK_X11_SCALE_XFT
+#ifndef DPISHIT_NO_HACK_SCALE_XFT
 	ret =
 		dpishit_xresources_xft_double(
 			dpishit,
@@ -119,7 +75,7 @@ bool dpishit_refresh_scale(
 	}
 #endif
 
-#ifndef DPISHIT_NO_HACK_X11_SCALE_ENV
+#ifndef DPISHIT_NO_HACK_SCALE_ENV
 	char* env[3] =
 	{
 		"GDK_SCALE",
@@ -143,7 +99,7 @@ bool dpishit_refresh_logic_density(
 {
 	bool ret = true;
 
-#ifndef DPISHIT_NO_HACK_X11_LOGIC_DPI_XFT
+#ifndef DPISHIT_NO_HACK_LOGIC_DPI_XFT
 	ret =
 		dpishit_xresources_xft_double(
 			dpishit,
@@ -156,7 +112,7 @@ bool dpishit_refresh_logic_density(
 	}
 #endif
 
-#ifndef DPISHIT_NO_HACK_X11_LOGIC_DPI_ENV
+#ifndef DPISHIT_NO_HACK_LOGIC_DPI_ENV
 	char* env[2] =
 	{
 		"GDK_DPI_SCALE",

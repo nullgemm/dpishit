@@ -1,4 +1,5 @@
 #include "dpishit.h"
+#include "nix.h"
 #include <pthread.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -67,7 +68,34 @@ bool dpishit_refresh_scale(
 bool dpishit_refresh_logic_density(
 	struct dpishit* dpishit)
 {
-	return false;
+	bool ret = false;
+
+	char* env[2] =
+	{
+		"GDK_DPI_SCALE",
+		"QT_FONT_DPI",
+	};
+
+	int env_scale =
+		dpishit_env_double(
+			dpishit,
+			env,
+			2,
+			&(dpishit->display_info.dpi_logic));
+
+	if (env_scale >= 0)
+	{
+		ret = true;
+	}
+
+	// GDK gives a scale, not a dpi value, so we apply it to the physical density
+	if (env_scale == 0)
+	{
+		dpishit->display_info.dpi_logic *= dpishit->display_info.px_width * 25.4;
+		dpishit->display_info.dpi_logic /= dpishit->display_info.mm_width;
+	}
+
+	return ret;
 }
 
 bool dpishit_refresh_real_density(
