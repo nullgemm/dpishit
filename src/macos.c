@@ -1,13 +1,13 @@
 #include "dpishit.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include "dpishit_macos.h"
 
 #include <objc/message.h>
 #include <objc/runtime.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // reproduce typedefs
 struct cg_point
@@ -34,10 +34,20 @@ enum cg_error
 };
 
 // fetch accessible symbols
-extern size_t CGDisplayPixelsWide(uint32_t);
-extern size_t CGDisplayPixelsHigh(uint32_t);
-extern struct cg_size CGDisplayScreenSize(uint32_t);
-extern enum cg_error CGGetActiveDisplayList(uint32_t, uint32_t*, uint32_t*);
+extern size_t CGDisplayPixelsWide(
+	uint32_t);
+
+extern size_t CGDisplayPixelsHigh(
+	uint32_t);
+
+extern struct cg_size CGDisplayScreenSize(
+	uint32_t);
+
+extern enum cg_error CGGetActiveDisplayList(
+	uint32_t,
+	uint32_t*,
+	uint32_t*);
+
 extern enum cg_error CGGetDisplaysWithRect(
 	struct cg_rect,
 	uint32_t,
@@ -45,7 +55,7 @@ extern enum cg_error CGGetDisplaysWithRect(
 	uint32_t*);
 
 // declare remaining functions
-double (*osx_msg_font)(id, SEL) =
+double (*macos_msg_font)(id, SEL) =
 	(double (*)(id, SEL)) objc_msgSend;
 
 // dpishit
@@ -53,7 +63,7 @@ bool dpishit_refresh_scale(
 	struct dpishit* dpishit)
 {
 	double font_size =
-		osx_msg_font(
+		macos_msg_font(
 			(id) objc_getClass("NSFont"),
 			sel_getUid("systemFontSize"));
 
@@ -95,7 +105,7 @@ bool dpishit_refresh_real_density(
 	struct cg_rect rect;
 
 	object_getInstanceVariable(
-		dpishit->osx_info.osx_win,
+		dpishit->dpishit_macos.window_obj,
 		"frame",
 		(void*) &rect);
 
@@ -143,7 +153,7 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	dpishit->osx_info = *((struct dpishit_osx_info*) display_system_info);
+	dpishit->dpishit_macos = *((struct dpishit_data_macos*) display_system_info);
 }
 
 struct dpishit_display_info* dpishit_get_display_info(

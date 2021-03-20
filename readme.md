@@ -7,8 +7,6 @@ Windows and OS X. Dpishit can find or compute the following values:
  - Logic display density (dpi)
  - Scale
 
-
-
 ## Linking
 For Linux/X11 you must link with XCB, RandR and xcb-util-xrm:
 ```
@@ -34,8 +32,6 @@ Under OS X you must link with `AppKit`:
 -framework AppKit
 ```
 
-
-
 ## Documentation
 ### 
 ### Density information APIs feature matrix
@@ -53,8 +49,6 @@ Under OS X you must link with `AppKit`:
 | Linux/Wayland |               | no            | yes, spot-on     | yes           |
 +---------------+---------------+---------------+------------------+---------------+
 ```
-
-
 
 ## Implementation details and information sources
 ### Linux
@@ -93,8 +87,6 @@ If `Xft.scale` is not availvable there are also environment variables for that:
 When using Wayland however, it is a better idea to just catch the
 [scale event](https://wayland-book.com/surfaces-in-depth/hidpi.html).
 
-
-
 ### Windows
 #### EDID dump accessibility
 A system EDID dump is stored in the registry and can be accessed with the
@@ -121,8 +113,6 @@ The user-set scaling factor is available from
 It is also possible to enable automatic window frame scaling with
 [EnableNonClientDpiScaling](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enablenonclientdpiscaling).
 
-
-
 ### Mac OS
 #### EDID dump accessibility
 A system EDID dump is stored as `IODisplayEDID` in the `AppleDisplay` class of
@@ -148,9 +138,8 @@ OS X does not provide a logic density value.
 
 #### Scaling settings
 OS X does not provide a scaling setting, but it does provide a system font size
-we can twist very easily once retrieved using [systemFontSize](https://developer.apple.com/documentation/appkit/nsfont/1531931-systemfontsize?language=objc).
-
-
+we can twist very easily once retrieved using
+[systemFontSize](https://developer.apple.com/documentation/appkit/nsfont/1531931-systemfontsize?language=objc).
 
 ## Greetings
 Fueled by Klaus Shulze albums \m/

@@ -1,5 +1,7 @@
 #include "dpishit.h"
+#include "dpishit_wayland.h"
 #include "nix.h"
+
 #include <pthread.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -19,12 +21,12 @@ void dpishit_wl_geometry(
 {
 	struct dpishit* dpishit = data;
 
-	pthread_mutex_lock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_lock(&(dpishit->dpishit_wayland.info_mutex));
 
 	dpishit->display_info.mm_width = physical_width;
 	dpishit->display_info.mm_height = physical_height;
 
-	pthread_mutex_unlock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_unlock(&(dpishit->dpishit_wayland.info_mutex));
 }
 
 void dpishit_wl_mode(
@@ -37,12 +39,12 @@ void dpishit_wl_mode(
 {
 	struct dpishit* dpishit = data;
 
-	pthread_mutex_lock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_lock(&(dpishit->dpishit_wayland.info_mutex));
 
 	dpishit->display_info.px_width = width;
 	dpishit->display_info.px_height = height;
 
-	pthread_mutex_unlock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_unlock(&(dpishit->dpishit_wayland.info_mutex));
 }
 
 void dpishit_wl_scale(
@@ -52,11 +54,11 @@ void dpishit_wl_scale(
 {
 	struct dpishit* dpishit = data;
 
-	pthread_mutex_lock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_lock(&(dpishit->dpishit_wayland.info_mutex));
 
 	dpishit->display_info.scale = scale;
 
-	pthread_mutex_unlock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_unlock(&(dpishit->dpishit_wayland.info_mutex));
 }
 
 bool dpishit_refresh_scale(
@@ -88,7 +90,7 @@ bool dpishit_refresh_logic_density(
 		ret = true;
 	}
 
-	// GDK gives a scale, not a dpi value, so we apply it to the physical density
+	// GDK gives a scale not a dpi value, so we apply it to the physical density
 	if (env_scale == 0)
 	{
 		dpishit->display_info.dpi_logic *= dpishit->display_info.px_width * 25.4;
@@ -108,17 +110,28 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	dpishit->wl_info = *((struct dpishit_wayland_info*) display_system_info);
+	dpishit->dpishit_wayland =
+		*((struct dpishit_data_wayland*) display_system_info);
+
+	pthread_mutex_init(&(dpishit->dpishit_wayland.info_mutex), NULL);
+	pthread_mutex_lock(&(dpishit->dpishit_wayland.info_mutex));
+
+	*(dpishit->dpishit_wayland.output_data) = dpishit;
+	dpishit->dpishit_wayland.listener->geometry = dpishit_wl_geometry;
+	dpishit->dpishit_wayland.listener->mode = dpishit_wl_mode;
+	dpishit->dpishit_wayland.listener->scale = dpishit_wl_scale;
+
+	pthread_mutex_unlock(&(dpishit->dpishit_wayland.info_mutex));
 }
 
 struct dpishit_display_info* dpishit_get_display_info(
 	struct dpishit* dpishit)
 {
-	pthread_mutex_lock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_lock(&(dpishit->dpishit_wayland.info_mutex));
 
-	dpishit->wl_info.display_info_copy = dpishit->display_info;
+	dpishit->dpishit_wayland.display_info_copy = dpishit->display_info;
 
-	pthread_mutex_unlock(&(dpishit->wl_info.wayland_info_mutex));
+	pthread_mutex_unlock(&(dpishit->dpishit_wayland.info_mutex));
 
-	return &(dpishit->wl_info.display_info_copy);
+	return &(dpishit->dpishit_wayland.display_info_copy);
 }

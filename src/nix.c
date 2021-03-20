@@ -1,5 +1,6 @@
 #include "dpishit.h"
 #include "nix.h"
+
 #include <stdlib.h>
 
 #if !defined(DPISHIT_NO_HACK_LOGIC_DPI_ENV) || !defined(DPISHIT_NO_HACK_SCALE_ENV)
@@ -45,4 +46,5 @@ int dpishit_env_double(
 
 	return i;
 }
+
 #endif

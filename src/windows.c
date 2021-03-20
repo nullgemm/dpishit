@@ -1,14 +1,15 @@
 #include "dpishit.h"
+
+#include <shellscalingapi.h>
+#include <shtypes.h>
 #include <stdbool.h>
 #include <windows.h>
-#include <shtypes.h>
-#include <shellscalingapi.h>
 
 bool dpishit_refresh_scale(
 	struct dpishit* dpishit)
 {
 	HMONITOR hmon = MonitorFromWindow(
-		dpishit->win_info.win_hwnd,
+		dpishit->dpishit_windows.hwnd,
 		MONITOR_DEFAULTTONULL);
 	
 	if (hmon == NULL)
@@ -128,7 +129,7 @@ bool dpishit_refresh_logic_density(
 {
 	dpishit->display_info.dpi_logic =
 		GetDeviceCaps(
-			dpishit->win_info.win_hdc,
+			dpishit->dpishit_windows.hdc,
 			LOGPIXELSX);
 
 	return true;
@@ -139,22 +140,22 @@ bool dpishit_refresh_real_density(
 {
 	dpishit->display_info.mm_width =
 		GetDeviceCaps(
-			dpishit->win_info.win_hdc,
+			dpishit->dpishit_windows.hdc,
 			HORZSIZE);
 
 	dpishit->display_info.mm_height =
 		GetDeviceCaps(
-			dpishit->win_info.win_hdc,
+			dpishit->dpishit_windows.hdc,
 			VERTSIZE);
 
 	dpishit->display_info.px_width =
 		GetDeviceCaps(
-			dpishit->win_info.win_hdc,
+			dpishit->dpishit_windows.hdc,
 			HORZRES);
 
 	dpishit->display_info.px_height =
 		GetDeviceCaps(
-			dpishit->win_info.win_hdc,
+			dpishit->dpishit_windows.hdc,
 			VERTRES);
 
 	return true;
@@ -164,7 +165,7 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	dpishit->win_info = *((struct dpishit_win_info*) display_system_info);
+	dpishit->dpishit_windows = *((struct dpishit_data_windows*) display_system_info);
 }
 
 struct dpishit_display_info* dpishit_get_display_info(

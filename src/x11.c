@@ -1,8 +1,10 @@
 #include "dpishit.h"
+#include "dpishit_x11.h"
 #include "nix.h"
+
 #include <stdbool.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <xcb/randr.h>
 
 #if !defined(DPISHIT_NO_HACK_SCALE_XFT) || !defined(DPISHIT_NO_HACK_LOGIC_DPI_XFT)
@@ -15,7 +17,7 @@
 	{
 		xcb_xrm_database_t* x11_xrm_db =
 			xcb_xrm_database_from_default(
-				dpishit->x11_info.x11_conn);
+				dpishit->dpishit_x11.conn);
 
 		if (x11_xrm_db == NULL)
 		{
@@ -146,8 +148,8 @@ bool dpishit_refresh_real_density(
 	struct dpishit* dpishit)
 {
 	// init
-	xcb_connection_t* x11_conn = dpishit->x11_info.x11_conn;
-	xcb_window_t x11_win = dpishit->x11_info.x11_win;
+	xcb_connection_t* x11_conn = dpishit->dpishit_x11.conn;
+	xcb_window_t x11_win = dpishit->dpishit_x11.win;
 	xcb_generic_error_t* x11_error;
 
 	// send request and get reply
@@ -211,7 +213,7 @@ void dpishit_init(
 	struct dpishit* dpishit,
 	void* display_system_info)
 {
-	dpishit->x11_info = *((struct dpishit_x11_info*) display_system_info);
+	dpishit->dpishit_x11 = *((struct dpishit_data_x11*) display_system_info);
 }
 
 struct dpishit_display_info* dpishit_get_display_info(
