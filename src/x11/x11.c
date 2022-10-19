@@ -2,6 +2,7 @@
 #include "common/dpishit_private.h"
 #include "include/dpishit_x11.h"
 #include "x11/x11.h"
+#include "nix/nix.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -67,14 +68,14 @@ static bool dpishit_refresh_real_density(
 
 	// init
 	xcb_connection_t* x11_conn = backend->conn;
-	xcb_window_t x11_win = backend->win;
+	xcb_window_t x11_window = backend->window;
 	xcb_generic_error_t* x11_error;
 
 	// send request and get reply
 	xcb_randr_get_screen_info_cookie_t x11_screen_info_cookie =
 		xcb_randr_get_screen_info(
 			x11_conn,
-			x11_win);
+			x11_window);
 
 	xcb_randr_get_screen_info_reply_t* x11_screen_info_reply =
 		xcb_randr_get_screen_info_reply(
@@ -157,6 +158,8 @@ void dpishit_x11_start(
 
 	backend->conn = window_data->conn;
 	backend->window = window_data->window;
+	backend->gdk_dpi_logic = 0.0;
+	backend->gdk_dpi_logic_valid = false;
 
 	bool error_xcb = dpishit_refresh_real_density(context);
 
@@ -208,7 +211,7 @@ void dpishit_x11_start(
 				context,
 				&env,
 				1,
-				&(context->display_info.dpi_logic));
+				&(backend->gdk_dpi_logic));
 	}
 
 	if (context->display_info.dpi_logic_valid == false)
@@ -227,8 +230,13 @@ void dpishit_x11_start(
 	{
 		// the GDK environment variable is valid, but since it is a density scale
 		// we have to compute the actual logic density value manually
-		context->display_info.dpi_logic *= context->px_width * 25.4;
-		context->display_info.dpi_logic /= context->mm_width;
+		context->display_info.dpi_logic =
+			backend->gdk_dpi_logic
+			* context->display_info.px_width
+			* 25.4
+			/ context->display_info.mm_width;
+
+		backend->gdk_dpi_logic_valid = true;
 	}
 
 	dpishit_error_ok(error);
@@ -248,6 +256,15 @@ struct dpishit_display_info dpishit_x11_get(
 	}
 	else
 	{
+		if (backend->gdk_dpi_logic_valid == true)
+		{
+			context->display_info.dpi_logic =
+				backend->gdk_dpi_logic
+				* context->display_info.px_width
+				* 25.4
+				/ context->display_info.mm_width;
+		}
+
 		dpishit_error_ok(error);
 	}
 
@@ -260,7 +277,6 @@ void dpishit_x11_stop(
 {
 	struct x11_backend* backend = context->backend_data;
 
-	xcb_cursor_context_free(backend->cursor);
 	dpishit_error_ok(error);
 }
 
@@ -280,7 +296,7 @@ void dpishit_prepare_init_x11(
 	config->data = NULL;
 	config->init = dpishit_x11_init;
 	config->start = dpishit_x11_start;
-	config->set = dpishit_x11_get;
+	config->get = dpishit_x11_get;
 	config->stop = dpishit_x11_stop;
 	config->clean = dpishit_x11_clean;
 }

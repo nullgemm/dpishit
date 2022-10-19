@@ -1,6 +1,8 @@
 #ifndef H_DPISHIT
 #define H_DPISHIT
 
+#include <stdbool.h>
+
 struct dpishit;
 
 enum dpishit_error

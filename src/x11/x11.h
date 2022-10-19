@@ -4,13 +4,15 @@
 #include "dpishit.h"
 #include "common/dpishit_error.h"
 
+#include <stdbool.h>
 #include <xcb/xcb.h>
 
 struct x11_backend
 {
 	xcb_connection_t* conn;
 	xcb_window_t window;
-	double font_dpi;
+	double gdk_dpi_logic;
+	bool gdk_dpi_logic_valid;
 };
 
 void dpishit_x11_init(
