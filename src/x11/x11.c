@@ -161,14 +161,6 @@ void dpishit_x11_start(
 	backend->gdk_dpi_logic = 0.0;
 	backend->gdk_dpi_logic_valid = false;
 
-	bool error_xcb = dpishit_refresh_real_density(context);
-
-	if (error_xcb == false)
-	{
-		dpishit_error_throw(context, error, DPISHIT_ERROR_XCB_DISPLAY_INFO);
-		return;
-	}
-
 	// get Xft's font dpi value
 	context->display_info.scale_valid =
 		dpishit_xresources_xft_double(
@@ -230,12 +222,7 @@ void dpishit_x11_start(
 	{
 		// the GDK environment variable is valid, but since it is a density scale
 		// we have to compute the actual logic density value manually
-		context->display_info.dpi_logic =
-			backend->gdk_dpi_logic
-			* context->display_info.px_width
-			* 25.4
-			/ context->display_info.mm_width;
-
+		context->display_info.dpi_logic_valid = false;
 		backend->gdk_dpi_logic_valid = true;
 	}
 
@@ -258,6 +245,7 @@ struct dpishit_display_info dpishit_x11_get(
 	{
 		if (backend->gdk_dpi_logic_valid == true)
 		{
+			context->display_info.dpi_logic_valid = true;
 			context->display_info.dpi_logic =
 				backend->gdk_dpi_logic
 				* context->display_info.px_width
