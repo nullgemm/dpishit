@@ -113,7 +113,6 @@ esac
 ninja_file=lib_elf.ninja
 src+=("src/common/dpishit.c")
 src+=("src/common/dpishit_error.c")
-src+=("src/nix/nix.c")
 
 # default target
 default+=("\$folder_library/\$name.a")

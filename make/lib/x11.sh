@@ -115,6 +115,7 @@ esac
 # backend
 ninja_file=lib_x11.ninja
 src+=("src/x11/x11.c")
+src+=("src/nix/nix.c")
 
 # default target
 default+=("\$folder_library/\$name.a")
