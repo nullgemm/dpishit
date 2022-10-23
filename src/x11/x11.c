@@ -4,6 +4,7 @@
 #include "x11/x11.h"
 #include "nix/nix.h"
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,71 +62,194 @@ static bool dpishit_xresources_xft_double(
 	return true;
 }
 
-static bool dpishit_refresh_real_density(
-	struct dpishit* context)
+static bool overlap(
+	int x1a,
+	int y1a,
+	int x1b,
+	int y1b,
+	int x2a,
+	int y2a,
+	int x2b,
+	int y2b)
+{
+	// 0-area rectangle
+	if (x1a == x1b || y1a == y1b || x2a == x2b || y2a == y2b)
+	{
+		return false;
+	}
+
+	// separated horizontally
+	if (x1a > x2b || x2a > x1b)
+	{
+		return false;
+	}
+
+	// separated vertically
+	if (y1a > y2b || y2a > y1b)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+static void dpishit_refresh_display_list(
+	struct dpishit* context,
+	struct dpishit_error_info* error)
 {
 	struct x11_backend* backend = context->backend_data;
+	xcb_generic_error_t* error_xcb;
 
-	// init
-	xcb_connection_t* x11_conn = backend->conn;
-	xcb_window_t x11_window = backend->window;
-	xcb_generic_error_t* x11_error;
+	// get screen resources
+	xcb_randr_get_screen_resources_current_cookie_t screen_res_cookie =
+		xcb_randr_get_screen_resources_current(
+			backend->conn,
+			backend->window);
 
-	// send request and get reply
-	xcb_randr_get_screen_info_cookie_t x11_screen_info_cookie =
-		xcb_randr_get_screen_info(
-			x11_conn,
-			x11_window);
+	xcb_randr_get_screen_resources_current_reply_t* screen_res_reply =
+		xcb_randr_get_screen_resources_current_reply(
+			backend->conn,
+			screen_res_cookie,
+			&error_xcb);
 
-	xcb_randr_get_screen_info_reply_t* x11_screen_info_reply =
-		xcb_randr_get_screen_info_reply(
-			x11_conn,
-			x11_screen_info_cookie,
-			&x11_error);
-
-	if (x11_error != NULL)
+	if (error_xcb != NULL)
 	{
-		free(x11_error);
-		return false;
+		dpishit_error_throw(context, error, DPISHIT_ERROR_X11_SCREEN_GET);
+		free(error_xcb);
+		return;
 	}
 
-	// process reply to get screen sizes
-	xcb_randr_screen_size_t* x11_screen_sizes =
-		xcb_randr_get_screen_info_sizes(
-			x11_screen_info_reply);
-
-	if (x11_screen_sizes == NULL)
-	{
-		free(x11_screen_info_reply);
-		return false;
-	}
-
-	int x11_screen_sizes_len =
-		xcb_randr_get_screen_info_sizes_length(
-			x11_screen_info_reply);
-
-	// RandR returns multiple display information sets using an array
-	// we will only save the size of the highest-density display
-	double dpm_cur;
-	double dpm_max = 0;
-	struct dpishit_display_info* display_info = &(context->display_info);
+	// get outputs list
+	int outputs_count =
+		xcb_randr_get_screen_resources_current_outputs_length(
+			screen_res_reply);
 	
-	for (int i = 0; i < x11_screen_sizes_len; ++i)
-	{
-		dpm_cur = x11_screen_sizes[i].width / x11_screen_sizes[i].mwidth;
+	xcb_randr_output_t* outputs_list =
+		xcb_randr_get_screen_resources_current_outputs(
+			screen_res_reply);
 
-		if (dpm_cur > dpm_max)
-		{
-			dpm_max = dpm_cur;
-			display_info->px_width = x11_screen_sizes[i].width;
-			display_info->px_height = x11_screen_sizes[i].height;
-			display_info->mm_width = x11_screen_sizes[i].mwidth;
-			display_info->mm_height = x11_screen_sizes[i].mheight;
-		}
+	// loop over the list
+	xcb_randr_get_output_info_cookie_t output_info_cookie;
+	xcb_randr_get_output_info_reply_t* output_info_reply;
+	xcb_randr_get_crtc_info_cookie_t crtc_info_cookie;
+	xcb_randr_get_crtc_info_reply_t* crtc_info_reply;
+	xcb_randr_crtc_t* crtcs_list;
+	int crtcs_count;
+	int i = 0;
+	int k = 0;
+
+	if (context->display_info != NULL)
+	{
+		free(context->display_info);
 	}
 
-	free(x11_screen_info_reply);
-	return true;
+	context->display_info =
+		malloc(
+			outputs_count
+			* (sizeof (struct dpishit_display_info)));
+
+	if (context->display_info == NULL)
+	{
+		dpishit_error_throw(context, error, DPISHIT_ERROR_ALLOC);
+		context->display_info_count = 0;
+		free(screen_res_reply);
+		return;
+	}
+
+	while (i < outputs_count)
+	{
+		// get output info
+		output_info_cookie =
+			xcb_randr_get_output_info(
+				backend->conn,
+				outputs_list[i],
+				XCB_CURRENT_TIME);
+
+		output_info_reply =
+			xcb_randr_get_output_info_reply(
+				backend->conn,
+				output_info_cookie,
+				&error_xcb);
+
+		if (error_xcb != NULL)
+		{
+			dpishit_error_throw(context, error, DPISHIT_ERROR_X11_OUTPUT_GET);
+			free(screen_res_reply);
+			free(error_xcb);
+			return;
+		}
+
+		if (output_info_reply->connection != XCB_RANDR_CONNECTION_CONNECTED)
+		{
+			free(output_info_reply);
+			++i;
+			continue;
+		}
+
+		crtc_info_cookie =
+			xcb_randr_get_crtc_info(
+				backend->conn,
+				output_info_reply->crtc,
+				XCB_CURRENT_TIME);
+
+		crtc_info_reply =
+			xcb_randr_get_crtc_info_reply(
+				backend->conn,
+				crtc_info_cookie,
+				&error_xcb);
+
+		if (error_xcb != NULL)
+		{
+			dpishit_error_throw(context, error, DPISHIT_ERROR_X11_CRTC_GET);
+			free(output_info_reply);
+			free(screen_res_reply);
+			free(error_xcb);
+			return;
+		}
+
+		if (crtc_info_reply->num_outputs == 0)
+		{
+			free(crtc_info_reply);
+			free(output_info_reply);
+			++i;
+			continue;
+		}
+
+		context->display_info[k].x = crtc_info_reply->x;
+		context->display_info[k].y = crtc_info_reply->y;
+		context->display_info[k].px_width = crtc_info_reply->width;
+		context->display_info[k].px_height = crtc_info_reply->height;
+		context->display_info[k].mm_width = output_info_reply->mm_width;
+		context->display_info[k].mm_height = output_info_reply->mm_height;
+
+		if (backend->gdk_dpi_logic_valid == true)
+		{
+			context->display_info[k].dpi_logic_valid = true;
+			context->display_info[k].dpi_logic =
+				backend->gdk_dpi_logic
+				* crtc_info_reply->width
+				* 25.4
+				/ output_info_reply->mm_width;
+		}
+		else
+		{
+			context->display_info[k].dpi_logic_valid = backend->dpi_logic_valid;
+			context->display_info[k].dpi_logic = backend->dpi_logic;
+		}
+
+		context->display_info[k].dpi_scale_valid = backend->dpi_scale_valid;
+		context->display_info[k].dpi_scale = backend->dpi_scale;
+		++k;
+
+		free(crtc_info_reply);
+		free(output_info_reply);
+		++i;
+	}
+
+	free(screen_res_reply);
+	context->display_info_count = k;
+	dpishit_error_ok(error);
+	return;
 }
 
 void dpishit_x11_init(
@@ -160,15 +284,26 @@ void dpishit_x11_start(
 	backend->window = window_data->window;
 	backend->gdk_dpi_logic = 0.0;
 	backend->gdk_dpi_logic_valid = false;
+	backend->dpi_logic = 0.0;
+	backend->dpi_logic_valid = false;
+	backend->dpi_scale = 0.0;
+	backend->dpi_scale_valid = false;
+
+	backend->window_x = 0;
+	backend->window_y = 0;
+	backend->window_width = 0;
+	backend->window_height = 0;
+
+	// TODO register for screen update events
 
 	// get Xft's font dpi value
-	context->display_info.scale_valid =
+	backend->dpi_scale_valid =
 		dpishit_xresources_xft_double(
 			context,
 			"Xft.scale",
-			&(context->display_info.scale));
+			&(backend->dpi_scale));
 
-	if (context->display_info.scale_valid == false)
+	if (backend->dpi_scale_valid == false)
 	{
 		// the Xft value could not be relied on so we try using the environment
 		char* env[3] =
@@ -178,27 +313,27 @@ void dpishit_x11_start(
 			"QT_SCALE_FACTOR",
 		};
 
-		context->display_info.scale_valid =
+		backend->dpi_scale_valid =
 			dpishit_env_double(
 				context,
 				env,
 				3,
-				&(context->display_info.scale));
+				&(backend->dpi_scale));
 	}
 
 	// get Xft's font scale value
-	context->display_info.dpi_logic_valid =
+	backend->dpi_logic_valid =
 		dpishit_xresources_xft_double(
 			context,
 			"Xft.dpi",
-			&(context->display_info.dpi_logic));
+			&(backend->dpi_logic));
 
-	if (context->display_info.dpi_logic_valid == false)
+	if (backend->dpi_logic_valid == false)
 	{
 		// the Xft value could not be relied on so we try using the GDK variable
 		char* env = "GDK_DPI_SCALE";
 
-		context->display_info.dpi_logic_valid =
+		backend->dpi_logic_valid =
 			dpishit_env_double(
 				context,
 				&env,
@@ -206,57 +341,138 @@ void dpishit_x11_start(
 				&(backend->gdk_dpi_logic));
 	}
 
-	if (context->display_info.dpi_logic_valid == false)
+	if (backend->dpi_logic_valid == false)
 	{
 		// the GDK environment variable is not valid, try with the Qt variable
 		char* env = "QT_FONT_DPI";
 
-		context->display_info.dpi_logic_valid =
+		backend->dpi_logic_valid =
 			dpishit_env_double(
 				context,
 				&env,
 				1,
-				&(context->display_info.dpi_logic));
+				&(backend->dpi_logic));
 	}
 	else
 	{
 		// the GDK environment variable is valid, but since it is a density scale
 		// we have to compute the actual logic density value manually
-		context->display_info.dpi_logic_valid = false;
+		backend->dpi_logic_valid = false;
 		backend->gdk_dpi_logic_valid = true;
+	}
+
+	dpishit_refresh_display_list(context, error);
+
+	if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
+	{
+		return;
 	}
 
 	dpishit_error_ok(error);
 }
 
-struct dpishit_display_info dpishit_x11_get(
+bool dpishit_x11_handle_event(
 	struct dpishit* context,
+	void* event,
+	struct dpishit_display_info* display_info,
 	struct dpishit_error_info* error)
 {
 	struct x11_backend* backend = context->backend_data;
 
-	bool error_xcb = dpishit_refresh_real_density(context);
+	// hande configure notify and screen update events
+	xcb_generic_event_t* xcb_event = event;
 
-	if (error_xcb == false)
+	// only lock the main mutex when making changes to the context
+	switch (xcb_event->response_type & ~0x80)
 	{
-		dpishit_error_throw(context, error, DPISHIT_ERROR_XCB_DISPLAY_INFO);
-	}
-	else
-	{
-		if (backend->gdk_dpi_logic_valid == true)
+		case XCB_CONFIGURE_NOTIFY:
 		{
-			context->display_info.dpi_logic_valid = true;
-			context->display_info.dpi_logic =
-				backend->gdk_dpi_logic
-				* context->display_info.px_width
-				* 25.4
-				/ context->display_info.mm_width;
-		}
+			xcb_configure_notify_event_t* configure =
+				(xcb_configure_notify_event_t*) xcb_event;
 
-		dpishit_error_ok(error);
+			// TODO get absolute coordinates
+			backend->window_x = configure->x;
+			backend->window_y = configure->y;
+			backend->window_width = configure->width;
+			backend->window_height = configure->height;
+
+			break;
+		}
+		// TODO add screen update event
+		#if 0
+		case :
+		{
+			dpishit_refresh_display_list(context, error);
+
+			if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
+			{
+				*display_info_list = NULL;
+				return 0;
+			}
+
+			break;
+		}
+		#endif
+		default:
+		{
+			break;
+		}
 	}
 
-	return context->display_info;
+	int x1a = backend->window_x;
+	int y1a = backend->window_y;
+	int x1b = x1a + backend->window_width;
+	int y1b = y1a + backend->window_height;
+	int x2a = 0;
+	int y2a = 0;
+	int x2b = 0;
+	int y2b = 0;
+	double area = 0.0;
+	double width = 0.0;
+	double height = 0.0;
+	bool intersection = false;
+	bool valid = false;
+
+	for (size_t i = 0; i < context->display_info_count; ++i)
+	{
+		x2a = context->display_info[i].x;
+		y2a = context->display_info[i].y;
+		x2b = x2a + context->display_info[i].px_width;
+		y2b = y2a + context->display_info[i].px_height;
+
+		intersection = overlap(x1a, y1a, x1b, y1b, x2a, y2a, x2b, y2b);
+
+		if (intersection == true)
+		{
+			// reduce the second rectangle to the intersection of both
+			x2a = (x1a > x2a) ? x1a : x2a;
+			y2a = (y1a > y2a) ? y1a : y2a;
+			x2b = (x1b < x2b) ? x1b : x2b;
+			y2b = (y1b < y2b) ? y1b : y2b;
+
+			// compute width and height of the intersection rectangle
+			width = x2b - x2a;
+			height = y2b - y2a;
+
+			// convert width and height to millimeters
+			width *= context->display_info[i].mm_width;
+			height *= context->display_info[i].mm_height;
+
+			width /= context->display_info[i].px_width;
+			height /= context->display_info[i].px_height;
+
+			// select the output displaying the biggest part of the window
+			// (comparing the window area in square millimeters on each screen)
+			if ((width * height) > area)
+			{
+				valid = true;
+				area = (width * height);
+				*display_info = context->display_info[i];
+			}
+		}
+	}
+
+	return valid;
 }
 
 void dpishit_x11_stop(
@@ -274,7 +490,13 @@ void dpishit_x11_clean(
 {
 	struct x11_backend* backend = context->backend_data;
 
+	if (context->display_info != NULL)
+	{
+		free(context->display_info);
+	}
+
 	free(backend);
+
 	dpishit_error_ok(error);
 }
 
@@ -284,7 +506,7 @@ void dpishit_prepare_init_x11(
 	config->data = NULL;
 	config->init = dpishit_x11_init;
 	config->start = dpishit_x11_start;
-	config->get = dpishit_x11_get;
+	config->handle_event = dpishit_x11_handle_event;
 	config->stop = dpishit_x11_stop;
 	config->clean = dpishit_x11_clean;
 }

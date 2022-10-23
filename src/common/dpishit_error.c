@@ -30,8 +30,13 @@ void dpishit_error_init(
 		"invalid domain";
 	log[DPISHIT_ERROR_FD] =
 		"invalid file descriptor";
-	log[DPISHIT_ERROR_XCB_DISPLAY_INFO] =
-		"could not get display info using XCB";
+
+	log[DPISHIT_ERROR_X11_SCREEN_GET] =
+		"could not get X11 screen resources info";
+	log[DPISHIT_ERROR_X11_OUTPUT_GET] =
+		"could not get X11 output info";
+	log[DPISHIT_ERROR_X11_CRTC_GET] =
+		"could not get X11 CRTC info";
 #endif
 }
 

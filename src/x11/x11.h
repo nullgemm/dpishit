@@ -13,6 +13,15 @@ struct x11_backend
 	xcb_window_t window;
 	double gdk_dpi_logic;
 	bool gdk_dpi_logic_valid;
+	double dpi_logic;
+	bool dpi_logic_valid;
+	double dpi_scale;
+	bool dpi_scale_valid;
+
+	int window_x;
+	int window_y;
+	unsigned window_width;
+	unsigned window_height;
 };
 
 void dpishit_x11_init(
@@ -24,8 +33,10 @@ void dpishit_x11_start(
 	void* data,
 	struct dpishit_error_info* error);
 
-struct dpishit_display_info dpishit_x11_get(
+bool dpishit_x11_handle_event(
 	struct dpishit* context,
+	void* event,
+	struct dpishit_display_info* display_info,
 	struct dpishit_error_info* error);
 
 void dpishit_x11_stop(

@@ -14,7 +14,9 @@ enum dpishit_error
 	DPISHIT_ERROR_DOMAIN,
 	DPISHIT_ERROR_FD,
 
-	DPISHIT_ERROR_XCB_DISPLAY_INFO,
+	DPISHIT_ERROR_X11_SCREEN_GET,
+	DPISHIT_ERROR_X11_OUTPUT_GET,
+	DPISHIT_ERROR_X11_CRTC_GET,
 
 	DPISHIT_ERROR_COUNT,
 };
@@ -28,14 +30,16 @@ struct dpishit_error_info
 
 struct dpishit_display_info
 {
+	int x;
+	int y;
 	unsigned px_width;
 	unsigned px_height;
 	unsigned mm_width;
 	unsigned mm_height;
 	double dpi_logic;
-	double scale;
 	bool dpi_logic_valid;
-	bool scale_valid;
+	double dpi_scale;
+	bool dpi_scale_valid;
 };
 
 struct dpishit_config_backend
@@ -51,8 +55,10 @@ struct dpishit_config_backend
 		void* data,
 		struct dpishit_error_info* error);
 
-	struct dpishit_display_info (*get)(
+	bool (*handle_event)(
 		struct dpishit* context,
+		void* event,
+		struct dpishit_display_info* display_info,
 		struct dpishit_error_info* error);
 
 	void (*stop)(
@@ -73,8 +79,10 @@ void dpishit_start(
 	void* data,
 	struct dpishit_error_info* error);
 
-struct dpishit_display_info dpishit_get(
+bool dpishit_handle_event(
 	struct dpishit* context,
+	void* event,
+	struct dpishit_display_info* display_info,
 	struct dpishit_error_info* error);
 
 void dpishit_stop(

@@ -4,12 +4,16 @@
 #include "include/dpishit.h"
 #include "common/dpishit_error.h"
 
+#include <stddef.h>
+
 struct dpishit
 {
 	char* error_messages[DPISHIT_ERROR_COUNT];
 	void* backend_data;
 	struct dpishit_config_backend backend_callbacks;
-	struct dpishit_display_info display_info;
+
+	struct dpishit_display_info* display_info;
+	size_t display_info_count;
 };
 
 #endif

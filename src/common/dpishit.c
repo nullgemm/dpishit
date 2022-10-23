@@ -23,14 +23,8 @@ struct dpishit* dpishit_init(
 	context->backend_callbacks = *config;
 	context->backend_callbacks.init(context, error);
 
-	context->display_info.px_width = 0;
-	context->display_info.px_height = 0;
-	context->display_info.mm_width = 0;
-	context->display_info.mm_height = 0;
-	context->display_info.dpi_logic = 0.0;
-	context->display_info.scale = 0.0;
-	context->display_info.dpi_logic_valid = false;
-	context->display_info.scale_valid = false;
+	context->display_info = NULL;
+	context->display_info_count = 0;
 
 	return context;
 }
@@ -43,11 +37,18 @@ void dpishit_start(
 	context->backend_callbacks.start(context, data, error);
 }
 
-struct dpishit_display_info dpishit_get(
+bool dpishit_handle_event(
 	struct dpishit* context,
+	void* event,
+	struct dpishit_display_info* display_info,
 	struct dpishit_error_info* error)
 {
-	return context->backend_callbacks.get(context, error);
+	return
+		context->backend_callbacks.handle_event(
+			context,
+			event,
+			display_info,
+			error);
 }
 
 void dpishit_stop(
