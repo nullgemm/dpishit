@@ -9,6 +9,7 @@ struct dpishit_x11_data
 {
 	xcb_connection_t* conn;
 	xcb_window_t window;
+	xcb_window_t root;
 };
 
 void dpishit_prepare_init_x11(

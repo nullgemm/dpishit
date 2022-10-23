@@ -4,7 +4,6 @@
 #include "x11/x11.h"
 #include "nix/nix.h"
 
-#include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,6 +59,11 @@ static bool dpishit_xresources_xft_double(
 	xcb_xrm_database_free(x11_xrm_db);
 	free(double_str);
 	return true;
+}
+
+static double abs2(double value)
+{
+	return value < 0.0 ? -value : value;
 }
 
 static bool overlap(
@@ -282,6 +286,7 @@ void dpishit_x11_start(
 
 	backend->conn = window_data->conn;
 	backend->window = window_data->window;
+	backend->root = window_data->root;
 	backend->gdk_dpi_logic = 0.0;
 	backend->gdk_dpi_logic_valid = false;
 	backend->dpi_logic = 0.0;
@@ -390,12 +395,35 @@ bool dpishit_x11_handle_event(
 			xcb_configure_notify_event_t* configure =
 				(xcb_configure_notify_event_t*) xcb_event;
 
-			// TODO get absolute coordinates
-			backend->window_x = configure->x;
-			backend->window_y = configure->y;
+			// translate position in screen coordinates
+			xcb_generic_error_t* error_xcb;
+
+			xcb_translate_coordinates_cookie_t cookie_translate =
+				xcb_translate_coordinates(
+					backend->conn,
+					backend->window,
+					backend->root,
+					0,
+					0);
+
+			xcb_translate_coordinates_reply_t* reply_translate =
+				xcb_translate_coordinates_reply(
+					backend->conn,
+					cookie_translate,
+					&error_xcb);
+
+			if (error_xcb != NULL)
+			{
+				dpishit_error_throw(context, error, DPISHIT_ERROR_X11_TRANSLATE);
+				return false;
+			}
+
+			backend->window_x = reply_translate->dst_x;
+			backend->window_y = reply_translate->dst_y;
 			backend->window_width = configure->width;
 			backend->window_height = configure->height;
 
+			free(reply_translate);
 			break;
 		}
 		// TODO add screen update event
@@ -463,11 +491,11 @@ bool dpishit_x11_handle_event(
 
 			// select the output displaying the biggest part of the window
 			// (comparing the window area in square millimeters on each screen)
-			if ((width * height) > area)
+			if (abs2(width * height) > area)
 			{
 				valid = true;
-				area = (width * height);
 				*display_info = context->display_info[i];
+				area = abs2(width * height);
 			}
 		}
 	}

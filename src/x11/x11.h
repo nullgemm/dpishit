@@ -11,6 +11,7 @@ struct x11_backend
 {
 	xcb_connection_t* conn;
 	xcb_window_t window;
+	xcb_window_t root;
 	double gdk_dpi_logic;
 	bool gdk_dpi_logic_valid;
 	double dpi_logic;
