@@ -299,7 +299,27 @@ void dpishit_x11_start(
 	backend->window_width = 0;
 	backend->window_height = 0;
 
-	// TODO register for screen update events
+	// register for screen update events
+	xcb_void_cookie_t randr_event_cookie =
+		xcb_randr_select_input(
+			backend->conn,
+			backend->window,
+			XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE
+			| XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE
+			| XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE
+			| XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY
+			| XCB_RANDR_NOTIFY_MASK_RESOURCE_CHANGE);
+
+	xcb_generic_error_t* error_xcb =
+		xcb_request_check(
+			backend->conn,
+			randr_event_cookie);
+
+	if (error_xcb != NULL)
+	{
+		dpishit_error_throw(context, error, DPISHIT_ERROR_X11_RANDR_EVENT);
+		return;
+	}
 
 	// get Xft's font dpi value
 	backend->dpi_scale_valid =
@@ -426,24 +446,21 @@ bool dpishit_x11_handle_event(
 			free(reply_translate);
 			break;
 		}
-		// TODO add screen update event
-		#if 0
-		case :
+		case XCB_RANDR_NOTIFY:
+		case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
 		{
 			dpishit_refresh_display_list(context, error);
 
 			if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
 			{
-				*display_info_list = NULL;
-				return 0;
+				return false;
 			}
 
 			break;
 		}
-		#endif
 		default:
 		{
-			break;
+			return false;
 		}
 	}
 
@@ -470,6 +487,8 @@ bool dpishit_x11_handle_event(
 
 		intersection = overlap(x1a, y1a, x1b, y1b, x2a, y2a, x2b, y2b);
 
+		// fails if the window is not on this output (because no intersection)
+		// fails if window sizes not initialized (because all values are zero)
 		if (intersection == true)
 		{
 			// reduce the second rectangle to the intersection of both
