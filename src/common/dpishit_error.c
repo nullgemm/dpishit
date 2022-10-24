@@ -41,6 +41,10 @@ void dpishit_error_init(
 		"could not translate X11 window coordinates";
 	log[DPISHIT_ERROR_X11_RANDR_EVENT] =
 		"could not request X11 RandR configuration event";
+	log[DPISHIT_ERROR_X11_RANDR_MISSING] =
+		"could not find X11 RandR extension";
+	log[DPISHIT_ERROR_X11_RANDR_VERSION] =
+		"could not select X11 RandR extension version";
 #endif
 }
 

@@ -283,6 +283,7 @@ void dpishit_x11_start(
 {
 	struct x11_backend* backend = context->backend_data;
 	struct dpishit_x11_data* window_data = data;
+	xcb_generic_error_t* error_xcb;
 
 	backend->conn = window_data->conn;
 	backend->window = window_data->window;
@@ -298,19 +299,48 @@ void dpishit_x11_start(
 	backend->window_y = 0;
 	backend->window_width = 0;
 	backend->window_height = 0;
+	backend->event = 0;
+
+	// check RandR is available
+	const xcb_query_extension_reply_t* extension =
+		xcb_get_extension_data(
+			backend->conn,
+			&xcb_randr_id);
+
+	if ((extension == NULL) || (extension->present == 0))
+	{
+		dpishit_error_throw(context, error, DPISHIT_ERROR_X11_RANDR_MISSING);
+		return;
+	}
+
+	// ask for a specific RandR version
+	xcb_randr_query_version_cookie_t version_cookie =
+		xcb_randr_query_version(backend->conn, 1, 4);
+
+	xcb_randr_query_version_reply_t* version_reply =
+		xcb_randr_query_version_reply(
+			backend->conn,
+			version_cookie,
+			&error_xcb);
+
+	if (error_xcb != NULL)
+	{
+		dpishit_error_throw(context, error, DPISHIT_ERROR_X11_RANDR_VERSION);
+		return;
+	}
+
+	backend->event = extension->first_event + XCB_RANDR_NOTIFY;
 
 	// register for screen update events
 	xcb_void_cookie_t randr_event_cookie =
 		xcb_randr_select_input(
 			backend->conn,
 			backend->window,
-			XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE
-			| XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE
+			XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE
 			| XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE
-			| XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY
 			| XCB_RANDR_NOTIFY_MASK_RESOURCE_CHANGE);
 
-	xcb_generic_error_t* error_xcb =
+	error_xcb =
 		xcb_request_check(
 			backend->conn,
 			randr_event_cookie);
@@ -408,60 +438,55 @@ bool dpishit_x11_handle_event(
 	xcb_generic_event_t* xcb_event = event;
 
 	// only lock the main mutex when making changes to the context
-	switch (xcb_event->response_type & ~0x80)
+	int code = xcb_event->response_type & ~0x80;
+
+	if (code == XCB_CONFIGURE_NOTIFY)
 	{
-		case XCB_CONFIGURE_NOTIFY:
+		xcb_configure_notify_event_t* configure =
+			(xcb_configure_notify_event_t*) xcb_event;
+
+		// translate position in screen coordinates
+		xcb_generic_error_t* error_xcb;
+
+		xcb_translate_coordinates_cookie_t cookie_translate =
+			xcb_translate_coordinates(
+				backend->conn,
+				backend->window,
+				backend->root,
+				0,
+				0);
+
+		xcb_translate_coordinates_reply_t* reply_translate =
+			xcb_translate_coordinates_reply(
+				backend->conn,
+				cookie_translate,
+				&error_xcb);
+
+		if (error_xcb != NULL)
 		{
-			xcb_configure_notify_event_t* configure =
-				(xcb_configure_notify_event_t*) xcb_event;
-
-			// translate position in screen coordinates
-			xcb_generic_error_t* error_xcb;
-
-			xcb_translate_coordinates_cookie_t cookie_translate =
-				xcb_translate_coordinates(
-					backend->conn,
-					backend->window,
-					backend->root,
-					0,
-					0);
-
-			xcb_translate_coordinates_reply_t* reply_translate =
-				xcb_translate_coordinates_reply(
-					backend->conn,
-					cookie_translate,
-					&error_xcb);
-
-			if (error_xcb != NULL)
-			{
-				dpishit_error_throw(context, error, DPISHIT_ERROR_X11_TRANSLATE);
-				return false;
-			}
-
-			backend->window_x = reply_translate->dst_x;
-			backend->window_y = reply_translate->dst_y;
-			backend->window_width = configure->width;
-			backend->window_height = configure->height;
-
-			free(reply_translate);
-			break;
+			dpishit_error_throw(context, error, DPISHIT_ERROR_X11_TRANSLATE);
+			return false;
 		}
-		case XCB_RANDR_NOTIFY:
-		case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
-		{
-			dpishit_refresh_display_list(context, error);
 
-			if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
-			{
-				return false;
-			}
+		backend->window_x = reply_translate->dst_x;
+		backend->window_y = reply_translate->dst_y;
+		backend->window_width = configure->width;
+		backend->window_height = configure->height;
 
-			break;
-		}
-		default:
+		free(reply_translate);
+	}
+	else if (code == backend->event)
+	{
+		dpishit_refresh_display_list(context, error);
+
+		if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
 		{
 			return false;
 		}
+	}
+	else
+	{
+		return false;
 	}
 
 	int x1a = backend->window_x;

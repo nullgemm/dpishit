@@ -23,6 +23,7 @@ struct x11_backend
 	int window_y;
 	unsigned window_width;
 	unsigned window_height;
+	uint8_t event;
 };
 
 void dpishit_x11_init(
