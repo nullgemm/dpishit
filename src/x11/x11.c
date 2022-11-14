@@ -329,6 +329,8 @@ void dpishit_x11_start(
 		return;
 	}
 
+	free(version_reply);
+
 	backend->event = extension->first_event + XCB_RANDR_NOTIFY;
 
 	// register for screen update events
