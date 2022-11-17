@@ -7,4 +7,4 @@ cd ./dpishit || exit
 git checkout next
 
 # test build
-./make/scripts/build.sh
+./make/scripts/build.sh "$@"
