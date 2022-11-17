@@ -1,5 +1,5 @@
-#ifndef H_DPISHIT_NIX
-#define H_DPISHIT_NIX
+#ifndef H_DPISHIT_INTERNAL_NIX
+#define H_DPISHIT_INTERNAL_NIX
 
 #include <stdbool.h>
 

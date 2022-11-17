@@ -1,5 +1,5 @@
-#ifndef H_DPISHIT_X11_PRIVATE
-#define H_DPISHIT_X11_PRIVATE
+#ifndef H_DPISHIT_INTERNAL_X11
+#define H_DPISHIT_INTERNAL_X11
 
 #include "dpishit.h"
 #include "common/dpishit_error.h"
