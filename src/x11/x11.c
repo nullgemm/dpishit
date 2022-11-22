@@ -204,11 +204,11 @@ static void dpishit_refresh_display_list(
 
 		if (error_xcb != NULL)
 		{
-			dpishit_error_throw(context, error, DPISHIT_ERROR_X11_CRTC_GET);
+			// It is possible for an output to have invalid CRTCs
+			// without it being an error, so we can just move on.
 			free(output_info_reply);
-			free(screen_res_reply);
-			free(error_xcb);
-			return;
+			++i;
+			continue;
 		}
 
 		if (crtc_info_reply->num_outputs == 0)

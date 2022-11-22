@@ -35,8 +35,6 @@ void dpishit_error_init(
 		"could not get X11 screen resources info";
 	log[DPISHIT_ERROR_X11_OUTPUT_GET] =
 		"could not get X11 output info";
-	log[DPISHIT_ERROR_X11_CRTC_GET] =
-		"could not get X11 CRTC info";
 	log[DPISHIT_ERROR_X11_TRANSLATE] =
 		"could not translate X11 window coordinates";
 	log[DPISHIT_ERROR_X11_RANDR_EVENT] =
