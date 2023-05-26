@@ -141,7 +141,6 @@ esac
 # backend
 ninja_file=lib_appkit.ninja
 src+=("src/appkit/macos.m")
-src+=("src/nix/nix.c")
 
 # default target
 default+=("\$folder_library/\$name.a")
@@ -234,7 +233,7 @@ echo ""; \
 echo "# compile sources" >> "$output/$ninja_file"
 for file in "${src[@]}"; do
 	folder=$(dirname "$file")
-	filename=$(basename "$file" .c)
+	filename=$(basename "$file" .m)
 	obj+=("\$folder_objects/$folder/$filename.o")
 	{ \
 	echo "build \$folder_objects/$folder/$filename.o: \$"; \
