@@ -1,5 +1,5 @@
-#ifndef H_DPISHIT_INTERNAL_MACOS
-#define H_DPISHIT_INTERNAL_MACOS
+#ifndef H_DPISHIT_INTERNAL_APPKIT
+#define H_DPISHIT_INTERNAL_APPKIT
 
 #include "dpishit.h"
 #include "common/dpishit_error.h"
