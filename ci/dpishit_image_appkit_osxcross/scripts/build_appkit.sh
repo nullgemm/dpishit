@@ -4,7 +4,7 @@ git clone https://github.com/nullgemm/dpishit.git
 cd ./dpishit || exit
 
 # TODO remove
-git checkout appkit
+git checkout next
 
 # test build
 export PATH=/scripts/sdk/target/bin/:/bin:/sbin:/usr/bin:/usr/sbin
