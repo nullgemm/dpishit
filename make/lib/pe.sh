@@ -117,8 +117,8 @@ exit 1
 	;;
 esac
 
-# common dpishit lib for elf executables
-ninja_file=lib_elf.ninja
+# common dpishit lib for pe executables
+ninja_file=lib_pe.ninja
 src+=("src/common/dpishit.c")
 src+=("src/common/dpishit_error.c")
 
@@ -167,7 +167,7 @@ echo ""; \
 
 { \
 echo "rule cc"; \
-echo "    deps = $cc"; \
+echo "    deps = gcc"; \
 echo "    depfile = \$out.d"; \
 echo "    command = \$cc \$flags \$defines -MMD -MF \$out.d -c \$in -o \$out"; \
 echo "    description = cc \$out"; \
@@ -189,7 +189,7 @@ echo ""; \
 
 { \
 echo "rule generator"; \
-echo "    command = make/lib/elf.sh $build"; \
+echo "    command = make/lib/pe.sh $build"; \
 echo "    description = re-generating the ninja build file"; \
 echo ""; \
 } >> "$output/$ninja_file"

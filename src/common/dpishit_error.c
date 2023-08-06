@@ -43,6 +43,13 @@ void dpishit_error_init(
 		"could not find X11 RandR extension";
 	log[DPISHIT_ERROR_X11_RANDR_VERSION] =
 		"could not select X11 RandR extension version";
+
+	log[DPISHIT_ERROR_WIN_MONITOR_GET] =
+		"could not get win32 window monitor";
+	log[DPISHIT_ERROR_WIN_MONITOR_INFO_GET] =
+		"could not get win32 window monitor info";
+	log[DPISHIT_ERROR_WIN_SCALE_GET] =
+		"could not get win32 window monitor scale factor";
 #endif
 }
 

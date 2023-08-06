@@ -5,24 +5,12 @@
 #include "common/dpishit_error.h"
 
 #include <stdbool.h>
+#include <windows.h>
 
 struct win_backend
 {
-	xcb_connection_t* conn;
-	xcb_window_t window;
-	xcb_window_t root;
-	double gdk_dpi_logic;
-	bool gdk_dpi_logic_valid;
-	double dpi_logic;
-	bool dpi_logic_valid;
-	double dpi_scale;
-	bool dpi_scale_valid;
-
-	int window_x;
-	int window_y;
-	unsigned window_width;
-	unsigned window_height;
-	uint8_t event;
+	HWND win;
+	HDC device_context;
 };
 
 void dpishit_win_init(

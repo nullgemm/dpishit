@@ -3,11 +3,12 @@
 
 #include "dpishit.h"
 
+#include <windows.h>
+
 struct dpishit_win_data
 {
-	xcb_connection_t* conn;
-	xcb_window_t window;
-	xcb_window_t root;
+	HWND win;
+	HDC device_context;
 };
 
 void dpishit_prepare_init_win(

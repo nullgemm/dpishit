@@ -168,7 +168,7 @@ echo ""; \
 
 { \
 echo "rule cc"; \
-echo "    deps = $cc"; \
+echo "    deps = gcc"; \
 echo "    depfile = \$out.d"; \
 echo "    command = \$cc \$flags \$defines -MMD -MF \$out.d -c \$in -o \$out"; \
 echo "    description = cc \$out"; \
