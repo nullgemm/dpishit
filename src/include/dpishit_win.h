@@ -7,8 +7,7 @@
 
 struct dpishit_win_data
 {
-	HWND win;
-	HDC device_context;
+	void* data;
 };
 
 void dpishit_prepare_init_win(

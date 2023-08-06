@@ -50,6 +50,10 @@ void dpishit_error_init(
 		"could not get win32 window monitor info";
 	log[DPISHIT_ERROR_WIN_SCALE_GET] =
 		"could not get win32 window monitor scale factor";
+	log[DPISHIT_ERROR_WIN_ACTIVE_GET] =
+		"couldn't get a win32 active window handle";
+	log[DPISHIT_ERROR_WIN_DEVICE_CONTEXT_GET] =
+		"couldn't get a win32 active window device context";
 #endif
 }
 

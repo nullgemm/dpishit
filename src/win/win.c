@@ -17,8 +17,18 @@ static void dpishit_pos(
 {
 	struct win_backend* backend = context->backend_data;
 
+	// get window handle
+	HWND win = GetActiveWindow();
+
+	if (win == NULL)
+	{
+		// fail silently
+		dpishit_error_ok(error);
+		return;
+	}
+
 	// get window main monitor
-	HMONITOR monitor = MonitorFromWindow(backend->win, MONITOR_DEFAULTTONEAREST);
+	HMONITOR monitor = MonitorFromWindow(win, MONITOR_DEFAULTTONEAREST);
 
 	if (monitor == NULL)
 	{
@@ -59,7 +69,19 @@ static void dpishit_scale(
 {
 	struct win_backend* backend = context->backend_data;
 
-	HMONITOR monitor = MonitorFromWindow(backend->win, MONITOR_DEFAULTTONEAREST);
+	HWND win = GetActiveWindow();
+
+	if (win == NULL)
+	{
+		dpishit_error_throw(
+			context,
+			error,
+			DPISHIT_ERROR_WIN_ACTIVE_GET);
+
+		return;
+	}
+
+	HMONITOR monitor = MonitorFromWindow(win, MONITOR_DEFAULTTONEAREST);
 
 	if (monitor == NULL)
 	{
@@ -171,6 +193,7 @@ static void dpishit_scale(
 	}
 
 	*valid = true;
+	dpishit_error_ok(error);
 }
 
 void dpishit_win_init(
@@ -201,9 +224,6 @@ void dpishit_win_start(
 	struct win_backend* backend = context->backend_data;
 	struct dpishit_win_data* window_data = data;
 
-	backend->win = window_data->win;
-	backend->device_context = window_data->device_context;
-
 	dpishit_error_ok(error);
 }
 
@@ -221,11 +241,33 @@ bool dpishit_win_handle_event(
 		&(display_info->y),
 		error);
 
-	display_info->px_width = GetDeviceCaps(backend->device_context, HORZRES);
-	display_info->px_height = GetDeviceCaps(backend->device_context, VERTRES);
-	display_info->mm_width = GetDeviceCaps(backend->device_context, HORZSIZE);
-	display_info->mm_height = GetDeviceCaps(backend->device_context, VERTSIZE);
-	display_info->dpi_logic = GetDeviceCaps(backend->device_context, LOGPIXELSX);
+	if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
+	{
+		return false;
+	}
+
+	HWND win = GetActiveWindow();
+
+	if (win == NULL)
+	{
+		// fail silently
+		dpishit_error_ok(error);
+		return false;
+	}
+
+	HDC device_context = GetDC(win);
+
+	if (device_context == NULL)
+	{
+		dpishit_error_throw(context, error, DPISHIT_ERROR_WIN_DEVICE_CONTEXT_GET);
+		return false;
+	}
+
+	display_info->px_width = GetDeviceCaps(device_context, HORZRES);
+	display_info->px_height = GetDeviceCaps(device_context, VERTRES);
+	display_info->mm_width = GetDeviceCaps(device_context, HORZSIZE);
+	display_info->mm_height = GetDeviceCaps(device_context, VERTSIZE);
+	display_info->dpi_logic = GetDeviceCaps(device_context, LOGPIXELSX);
 	display_info->dpi_logic_valid = true;
 
 	dpishit_scale(
@@ -233,6 +275,11 @@ bool dpishit_win_handle_event(
 		&(display_info->dpi_scale),
 		&(display_info->dpi_scale_valid),
 		error);
+
+	if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
+	{
+		return false;
+	}
 
 	dpishit_error_ok(error);
 	return true;
