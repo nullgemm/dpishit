@@ -18,7 +18,7 @@ static void dpishit_pos(
 	struct win_backend* backend = context->backend_data;
 
 	// get window main monitor
-	HMONITOR monitor = MonitorFromWindow(backend->win, MONITOR_DEFAULTTONULL);
+	HMONITOR monitor = MonitorFromWindow(backend->win, MONITOR_DEFAULTTONEAREST);
 
 	if (monitor == NULL)
 	{
@@ -59,7 +59,7 @@ static void dpishit_scale(
 {
 	struct win_backend* backend = context->backend_data;
 
-	HMONITOR monitor = MonitorFromWindow(backend->win, MONITOR_DEFAULTTONULL);
+	HMONITOR monitor = MonitorFromWindow(backend->win, MONITOR_DEFAULTTONEAREST);
 
 	if (monitor == NULL)
 	{
