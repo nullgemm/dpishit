@@ -9,10 +9,12 @@
 #include <shellscalingapi.h>
 #include <windows.h>
 
-static void dpishit_pos(
+static void dpishit_rect(
 	struct dpishit* context,
 	int* x,
 	int* y,
+	unsigned* width,
+	unsigned* height,
 	struct dpishit_error_info* error)
 {
 	struct win_backend* backend = context->backend_data;
@@ -58,6 +60,8 @@ static void dpishit_pos(
 	dpishit_error_ok(error);
 	*x = info.rcMonitor.left;
 	*y = info.rcMonitor.top;
+	*width = info.rcMonitor.right - info.rcMonitor.left;
+	*height = info.rcMonitor.bottom - info.rcMonitor.top;
 	return;
 }
 
@@ -235,10 +239,12 @@ bool dpishit_win_handle_event(
 {
 	struct win_backend* backend = context->backend_data;
 
-	dpishit_pos(
+	dpishit_rect(
 		context,
 		&(display_info->x),
 		&(display_info->y),
+		&(display_info->px_width),
+		&(display_info->px_height),
 		error);
 
 	if (dpishit_error_get_code(error) != DPISHIT_ERROR_OK)
@@ -263,8 +269,6 @@ bool dpishit_win_handle_event(
 		return false;
 	}
 
-	display_info->px_width = GetDeviceCaps(device_context, HORZRES);
-	display_info->px_height = GetDeviceCaps(device_context, VERTRES);
 	display_info->mm_width = GetDeviceCaps(device_context, HORZSIZE);
 	display_info->mm_height = GetDeviceCaps(device_context, VERTSIZE);
 	display_info->dpi_logic = GetDeviceCaps(device_context, LOGPIXELSX);
