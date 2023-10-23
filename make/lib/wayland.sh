@@ -18,9 +18,9 @@ output="make/output"
 folder_ninja="build"
 folder_objects="\$builddir/obj"
 folder_dpishit="dpishit_bin_$tag"
-folder_library="\$folder_dpishit/lib/dpishit"
+folder_library="\$folder_dpishit/lib/dpishit/wayland"
 folder_include="\$folder_dpishit/include"
-name="dpishit_elf"
+name="dpishit_wayland"
 cc="gcc"
 ar="ar"
 
@@ -31,9 +31,11 @@ flags+=("-Wformat")
 flags+=("-Wformat-security")
 flags+=("-Wno-address-of-packed-member")
 flags+=("-Wno-unused-parameter")
+flags+=("-Wno-unused-variable")
 flags+=("-Isrc")
 flags+=("-Isrc/include")
 flags+=("-fPIC")
+flags+=("-fdiagnostics-color=always")
 
 #defines+=("-DDPISHIT_ERROR_ABORT")
 #defines+=("-DDPISHIT_ERROR_SKIP")
@@ -101,6 +103,7 @@ flags+=("-fno-optimize-sibling-calls")
 
 flags+=("-fsanitize=thread")
 flags+=("-fsanitize-recover=all")
+defines+=("-DDPISHIT_ERROR_LOG_THROW")
 	;;
 
 	*)
@@ -109,10 +112,11 @@ exit 1
 	;;
 esac
 
-# common dpishit lib for elf executables
-ninja_file=lib_elf.ninja
-src+=("src/common/dpishit.c")
-src+=("src/common/dpishit_error.c")
+# backend
+ninja_file=lib_wayland.ninja
+src+=("src/wayland/wayland.c")
+src+=("src/wayland/wayland_helpers.c")
+src+=("src/nix/nix.c")
 
 # default target
 default+=("\$folder_library/\$name.a")
@@ -181,7 +185,7 @@ echo ""; \
 
 { \
 echo "rule generator"; \
-echo "    command = make/lib/elf.sh $build"; \
+echo "    command = make/lib/wayland.sh $build"; \
 echo "    description = re-generating the ninja build file"; \
 echo ""; \
 } >> "$output/$ninja_file"
@@ -190,14 +194,14 @@ echo ""; \
 ## copy headers
 { \
 echo "# copy headers"; \
-echo "build \$folder_include/dpishit.h: \$"; \
-echo "cp src/include/dpishit.h"; \
+echo "build \$folder_include/dpishit_wayland.h: \$"; \
+echo "cp src/include/dpishit_wayland.h"; \
 echo ""; \
 } >> "$output/$ninja_file"
 
 { \
 echo "build headers: phony \$"; \
-echo "\$folder_include/dpishit.h \$"; \
+echo "\$folder_include/dpishit_wayland.h"; \
 echo ""; \
 } >> "$output/$ninja_file"
 
