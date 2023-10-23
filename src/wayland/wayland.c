@@ -111,7 +111,7 @@ void dpishit_wayland_start(
 
 	context->display_info =
 		malloc(
-			context->display_info_count,
+			context->display_info_count
 			* (sizeof (struct dpishit_display_info)));
 
 	if (context->display_info == NULL)

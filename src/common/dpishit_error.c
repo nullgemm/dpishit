@@ -54,6 +54,11 @@ void dpishit_error_init(
 		"couldn't get a win32 active window handle";
 	log[DPISHIT_ERROR_WIN_DEVICE_CONTEXT_GET] =
 		"couldn't get a win32 active window device context";
+
+	log[DPISHIT_ERROR_WAYLAND_REQUEST] =
+		"could not perform Wayland request";
+	log[DPISHIT_ERROR_WAYLAND_LISTENER_ADD] =
+		"could not add Wayland listener";
 #endif
 }
 
