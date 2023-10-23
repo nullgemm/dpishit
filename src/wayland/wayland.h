@@ -9,17 +9,6 @@
 
 struct wayland_backend
 {
-	// wayland data
-	struct wl_output* output;
-	struct wl_output_listener output_listener;
-
-	// event callback
-	void (*event_callback)(
-		void* data,
-		void* event);
-
-	void* event_callback_data;
-
 	// saved info
 	bool new_info;
 	double gdk_dpi_logic;
@@ -28,6 +17,17 @@ struct wayland_backend
 	bool dpi_logic_valid;
 	double dpi_scale;
 	bool dpi_scale_valid;
+
+	// wayland data
+	struct wl_output* output;
+	struct wl_output_listener listener_output;
+
+	// event callback
+	void (*event_callback)(
+		void* data,
+		void* event);
+
+	void* event_callback_data;
 };
 
 void dpishit_wayland_init(

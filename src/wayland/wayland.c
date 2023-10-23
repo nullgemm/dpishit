@@ -26,6 +26,17 @@ void dpishit_wayland_init(
 
 	context->backend_data = backend;
 
+	// output listener
+	struct wl_output_listener listener_output =
+	{
+		.geometry = dpishit_wayland_helpers_output_geometry,
+		.mode = dpishit_wayland_helpers_output_mode,
+		.done = dpishit_wayland_helpers_output_done,
+		.scale = dpishit_wayland_helpers_output_scale,
+	};
+
+	backend->listener_output = listener_output;
+
 	dpishit_error_ok(error);
 }
 
@@ -125,7 +136,7 @@ void dpishit_wayland_start(
 	// register output callbacks
 	window_data->add_registry_handler(
 		window_data->add_registry_handler_data,
-		dpishit_helpers_wayland_registry_handler,
+		dpishit_wayland_helpers_registry_handler,
 		context);
 
 	// all good
@@ -169,6 +180,11 @@ void dpishit_wayland_clean(
 	if (context->display_info != NULL)
 	{
 		free(context->display_info);
+	}
+
+	if (backend->output == NULL)
+	{
+		wl_output_destroy(backend->output);
 	}
 
 	free(backend);
