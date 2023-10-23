@@ -30,7 +30,7 @@ void dpishit_wayland_helpers_registry_handler(
 				registry,
 				name,
 				&wl_output_interface,
-				1);
+				2);
 
 		if (backend->output == NULL)
 		{
