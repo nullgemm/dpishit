@@ -182,7 +182,7 @@ void dpishit_wayland_clean(
 		free(context->display_info);
 	}
 
-	if (backend->output == NULL)
+	if (backend->output != NULL)
 	{
 		wl_output_destroy(backend->output);
 	}
