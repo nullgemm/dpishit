@@ -187,6 +187,11 @@ void dpishit_wayland_clean(
 		free(context->display_info);
 	}
 
+	for (size_t i = 0; i < context->display_info_count; ++i)
+	{
+		wl_output_destroy(backend->outputs[i].output);
+	}
+
 	if (backend->outputs != NULL)
 	{
 		free(backend->outputs);

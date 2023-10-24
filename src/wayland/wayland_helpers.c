@@ -138,7 +138,7 @@ void dpishit_wayland_helpers_registry_remover(
 	}
 
 	// release output
-	wl_output_release(backend->outputs[k].output);
+	wl_output_destroy(backend->outputs[k].output);
 
 	// decrease array size
 	context->display_info_count -= 1;
