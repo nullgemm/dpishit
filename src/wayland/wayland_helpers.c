@@ -72,6 +72,7 @@ void dpishit_wayland_helpers_registry_handler(
 		// bind output / initialize our output info slot
 		backend->outputs[k].done = false;
 		backend->outputs[k].name = name;
+		backend->outputs[k].priority = 0;
 
 		backend->outputs[k].output =
 			wl_registry_bind(
@@ -184,6 +185,11 @@ size_t dpishit_wayland_helpers_output_index(struct dpishit* context, struct wl_o
 	struct wayland_backend* backend = context->backend_data;
 	size_t k = 0;
 
+	if (output == NULL)
+	{
+		return SIZE_MAX;
+	}
+
 	while (k < context->display_info_count)
 	{
 		if (backend->outputs[k].output == output)
@@ -207,6 +213,7 @@ void dpishit_wayland_helpers_surface_enter(
 	struct dpishit_error_info error;
 
 	// save the monitor we just entered as the current one
+	backend->total_active += 1;
 	backend->output_current = output;
 
 	// if the current monitor was fully configured, process event
@@ -217,6 +224,8 @@ void dpishit_wayland_helpers_surface_enter(
 		dpishit_error_throw(context, &error, DPISHIT_ERROR_BOUNDS);
 		return;
 	}
+
+	backend->outputs[k].priority = backend->total_active;
 
 	if (backend->outputs[k].done == true)
 	{
@@ -234,11 +243,57 @@ void dpishit_wayland_helpers_surface_leave(
 	struct wayland_backend* backend = context->backend_data;
 	struct dpishit_error_info error;
 
+	// set output priority to 0
+	backend->total_active -= 1;
+
+	size_t k = dpishit_wayland_helpers_output_index(context, output);
+
+	if (k == SIZE_MAX)
+	{
+		dpishit_error_throw(context, &error, DPISHIT_ERROR_BOUNDS);
+		return;
+	}
+
+	size_t priority = backend->outputs[k].priority; // save priority value
+
+	backend->outputs[k].priority = 0;
+
+	// also decrement all output priorities above it
+	size_t max = 0;
+	size_t m = 0;
+
+	for (size_t i = 0; i < context->display_info_count; ++i)
+	{
+		if (backend->outputs[i].priority > priority)
+		{
+			backend->outputs[i].priority -= 1;
+		}
+
+		if (max < backend->outputs[i].priority) // save max priority index
+		{
+			max = backend->outputs[i].priority;
+			m = i;
+		}
+	}
+
 	// If the monitor we just leaved was the current one,
-	// we reset the current monitor variable.
+	// we update the current monitor variable.
 	if (backend->output_current == output)
 	{
-		backend->output_current = NULL;
+		if (max > 0)
+		{
+			backend->output_current = backend->outputs[m].output;
+
+			if (backend->outputs[m].done == true)
+			{
+				backend->new_info = true;
+				backend->event_callback(backend->event_callback_data, NULL);
+			}
+		}
+		else
+		{
+			backend->output_current = NULL;
+		}
 	}
 }
 

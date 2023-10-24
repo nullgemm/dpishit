@@ -12,6 +12,7 @@ struct wayland_backend_output
 {
 	bool done;
 	uint32_t name;
+	size_t priority;
 	struct wl_output* output;
 };
 
@@ -19,6 +20,7 @@ struct wayland_backend
 {
 	// saved info
 	bool new_info;
+	size_t total_active;
 	double gdk_dpi_logic;
 	bool gdk_dpi_logic_valid;
 	double dpi_logic;

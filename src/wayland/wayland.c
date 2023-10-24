@@ -72,6 +72,7 @@ void dpishit_wayland_start(
 
 	// initialize backend
 	backend->new_info = false;
+	backend->total_active = 0;
 	backend->gdk_dpi_logic = 0.0;
 	backend->gdk_dpi_logic_valid = false;
 	backend->dpi_logic = 0.0;
