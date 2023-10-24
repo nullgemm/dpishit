@@ -9,6 +9,7 @@
 
 struct dpishit_wayland_data
 {
+	// capabilities handler
 	bool (*add_capabilities_handler)(
 		void* data,
 		void (*capabilities_handler)(
@@ -19,6 +20,7 @@ struct dpishit_wayland_data
 
 	void* add_capabilities_handler_data;
 
+	// registry handler
 	bool (*add_registry_handler)(
 		void* data,
 		void (*registry_handler)(
@@ -31,12 +33,29 @@ struct dpishit_wayland_data
 
 	void* add_registry_handler_data;
 
+	// registry remover
+	bool (*add_registry_remover)(
+		void* data,
+		void (*registry_remover)(
+			void* data,
+			struct wl_registry* registry,
+			uint32_t name),
+		void* registry_remover_data);
+
+	void* add_registry_remover_data;
+
+	// event callback
 	void (*event_callback)(
 		void* data,
 		void* event);
 
 	void* event_callback_data;
 };
+
+void dpishit_set_wayland_surface(
+	struct dpishit* context,
+	struct wl_surface* surface,
+	struct dpishit_error_info* error);
 
 void dpishit_prepare_init_wayland(
 	struct dpishit_config_backend* config);

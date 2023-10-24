@@ -16,6 +16,25 @@ void dpishit_wayland_helpers_registry_handler(
 	const char* interface,
 	uint32_t version);
 
+void dpishit_wayland_helpers_registry_remover(
+	void* data,
+	struct wl_registry* registry,
+	uint32_t name);
+
+size_t dpishit_wayland_helpers_output_index(
+	struct dpishit* context,
+	struct wl_output* output);
+
+void dpishit_wayland_helpers_surface_enter(
+	void* data,
+	struct wl_surface* surface,
+	struct wl_output* output);
+
+void dpishit_wayland_helpers_surface_leave(
+	void* data,
+	struct wl_surface* surface,
+	struct wl_output* output);
+
 void dpishit_wayland_helpers_output_geometry(
 	void* data,
 	struct wl_output* output,

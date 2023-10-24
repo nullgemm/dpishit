@@ -5,7 +5,15 @@
 #include "common/dpishit_error.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <wayland-client.h>
+
+struct wayland_backend_output
+{
+	bool done;
+	uint32_t name;
+	struct wl_output* output;
+};
 
 struct wayland_backend
 {
@@ -19,7 +27,12 @@ struct wayland_backend
 	bool dpi_scale_valid;
 
 	// wayland data
-	struct wl_output* output;
+	struct wayland_backend_output* outputs;
+	struct wl_output* output_current;
+	struct wl_surface* surface;
+
+	// listeners
+	struct wl_surface_listener listener_surface;
 	struct wl_output_listener listener_output;
 
 	// event callback

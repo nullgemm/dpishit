@@ -26,6 +26,20 @@ void dpishit_wayland_init(
 
 	context->backend_data = backend;
 
+	// wayland structures
+	backend->outputs = NULL;
+	backend->output_current = NULL;
+	backend->surface = NULL;
+
+	// surface listener
+	struct wl_surface_listener listener_surface =
+	{
+		.enter = dpishit_wayland_helpers_surface_enter,
+		.leave = dpishit_wayland_helpers_surface_leave,
+	};
+
+	backend->listener_surface = listener_surface;
+
 	// output listener
 	struct wl_output_listener listener_output =
 	{
@@ -36,6 +50,10 @@ void dpishit_wayland_init(
 	};
 
 	backend->listener_output = listener_output;
+
+	// display info array
+	context->display_info_count = 0;
+	context->display_info = NULL;
 
 	dpishit_error_ok(error);
 }
@@ -106,37 +124,15 @@ void dpishit_wayland_start(
 		backend->gdk_dpi_logic_valid = true;
 	}
 
-	// allocate a single display info slot for wayland
-	context->display_info_count = 1;
-
-	context->display_info =
-		malloc(
-			context->display_info_count
-			* (sizeof (struct dpishit_display_info)));
-
-	if (context->display_info == NULL)
-	{
-		dpishit_error_throw(context, error, DPISHIT_ERROR_ALLOC);
-		context->display_info_count = 0;
-		return;
-	}
-
-	// initialize our display info slot
-	context->display_info[0].x = 0;
-	context->display_info[0].y = 0;
-	context->display_info[0].px_width = 0;
-	context->display_info[0].px_height = 0;
-	context->display_info[0].mm_width = 0;
-	context->display_info[0].mm_height = 0;
-	context->display_info[0].dpi_logic_valid = backend->dpi_logic_valid;
-	context->display_info[0].dpi_logic = backend->dpi_logic;
-	context->display_info[0].dpi_scale_valid = backend->dpi_scale_valid;
-	context->display_info[0].dpi_scale = backend->dpi_scale;
-
 	// register output callbacks
 	window_data->add_registry_handler(
 		window_data->add_registry_handler_data,
 		dpishit_wayland_helpers_registry_handler,
+		context);
+
+	window_data->add_registry_remover(
+		window_data->add_registry_remover_data,
+		dpishit_wayland_helpers_registry_remover,
 		context);
 
 	// all good
@@ -156,7 +152,15 @@ bool dpishit_wayland_handle_event(
 		return false;
 	}
 
-	*display_info = *(context->display_info);
+	size_t k = dpishit_wayland_helpers_output_index(context, backend->output_current);
+
+	if (k == SIZE_MAX)
+	{
+		dpishit_error_throw(context, error, DPISHIT_ERROR_BOUNDS);
+		return false;
+	}
+
+	*display_info = context->display_info[k];
 	backend->new_info = false;
 
 	return true;
@@ -182,12 +186,42 @@ void dpishit_wayland_clean(
 		free(context->display_info);
 	}
 
-	if (backend->output != NULL)
+	if (backend->outputs != NULL)
 	{
-		wl_output_destroy(backend->output);
+		free(backend->outputs);
 	}
 
 	free(backend);
+
+	dpishit_error_ok(error);
+}
+
+void dpishit_set_wayland_surface(
+	struct dpishit* context,
+	struct wl_surface* surface,
+	struct dpishit_error_info* error)
+{
+	struct wayland_backend* backend = context->backend_data;
+	int error_posix;
+
+	// setup wayland surface
+	backend->surface = surface;
+
+	error_posix =
+		wl_surface_add_listener(
+			backend->surface,
+			&(backend->listener_surface),
+			context);
+
+	if (error_posix == -1)
+	{
+		dpishit_error_throw(
+			context,
+			error,
+			DPISHIT_ERROR_WAYLAND_LISTENER_ADD);
+
+		return;
+	}
 
 	dpishit_error_ok(error);
 }
