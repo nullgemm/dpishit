@@ -1,0 +1,7 @@
+dpishit_wayland_init
+dpishit_wayland_start
+dpishit_wayland_handle_event
+dpishit_wayland_stop
+dpishit_wayland_clean
+dpishit_set_wayland_surface
+dpishit_prepare_init_wayland
