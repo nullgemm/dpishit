@@ -34,8 +34,8 @@ void dpishit_wayland_init(
 	// surface listener
 	struct wl_surface_listener listener_surface =
 	{
-		.enter = dpishit_wayland_helpers_surface_enter,
-		.leave = dpishit_wayland_helpers_surface_leave,
+		.enter = wayland_helpers_surface_enter,
+		.leave = wayland_helpers_surface_leave,
 	};
 
 	backend->listener_surface = listener_surface;
@@ -43,10 +43,10 @@ void dpishit_wayland_init(
 	// output listener
 	struct wl_output_listener listener_output =
 	{
-		.geometry = dpishit_wayland_helpers_output_geometry,
-		.mode = dpishit_wayland_helpers_output_mode,
-		.done = dpishit_wayland_helpers_output_done,
-		.scale = dpishit_wayland_helpers_output_scale,
+		.geometry = wayland_helpers_output_geometry,
+		.mode = wayland_helpers_output_mode,
+		.done = wayland_helpers_output_done,
+		.scale = wayland_helpers_output_scale,
 	};
 
 	backend->listener_output = listener_output;
@@ -128,12 +128,12 @@ void dpishit_wayland_start(
 	// register output callbacks
 	window_data->add_registry_handler(
 		window_data->add_registry_handler_data,
-		dpishit_wayland_helpers_registry_handler,
+		wayland_helpers_registry_handler,
 		context);
 
 	window_data->add_registry_remover(
 		window_data->add_registry_remover_data,
-		dpishit_wayland_helpers_registry_remover,
+		wayland_helpers_registry_remover,
 		context);
 
 	// all good
@@ -153,7 +153,7 @@ bool dpishit_wayland_handle_event(
 		return false;
 	}
 
-	size_t k = dpishit_wayland_helpers_output_index(context, backend->output_current);
+	size_t k = wayland_helpers_output_index(context, backend->output_current);
 
 	if (k == SIZE_MAX)
 	{

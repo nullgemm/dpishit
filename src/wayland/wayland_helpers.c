@@ -11,7 +11,7 @@
 #include <string.h>
 
 // registry handler
-void dpishit_wayland_helpers_registry_handler(
+void wayland_helpers_registry_handler(
 	void* data,
 	struct wl_registry* registry,
 	uint32_t name,
@@ -109,7 +109,7 @@ void dpishit_wayland_helpers_registry_handler(
 	}
 }
 
-void dpishit_wayland_helpers_registry_remover(
+void wayland_helpers_registry_remover(
 	void* data,
 	struct wl_registry* registry,
 	uint32_t name)
@@ -180,7 +180,7 @@ void dpishit_wayland_helpers_registry_remover(
 	backend->outputs = outputs;
 }
 
-size_t dpishit_wayland_helpers_output_index(struct dpishit* context, struct wl_output* output)
+size_t wayland_helpers_output_index(struct dpishit* context, struct wl_output* output)
 {
 	struct wayland_backend* backend = context->backend_data;
 	size_t k = 0;
@@ -203,7 +203,7 @@ size_t dpishit_wayland_helpers_output_index(struct dpishit* context, struct wl_o
 	return SIZE_MAX;
 }
 
-void dpishit_wayland_helpers_surface_enter(
+void wayland_helpers_surface_enter(
 	void* data,
 	struct wl_surface* surface,
 	struct wl_output* output)
@@ -217,7 +217,7 @@ void dpishit_wayland_helpers_surface_enter(
 	backend->output_current = output;
 
 	// if the current monitor was fully configured, process event
-	size_t k = dpishit_wayland_helpers_output_index(context, output);
+	size_t k = wayland_helpers_output_index(context, output);
 
 	if (k == SIZE_MAX)
 	{
@@ -234,7 +234,7 @@ void dpishit_wayland_helpers_surface_enter(
 	}
 }
 
-void dpishit_wayland_helpers_surface_leave(
+void wayland_helpers_surface_leave(
 	void* data,
 	struct wl_surface* surface,
 	struct wl_output* output)
@@ -246,7 +246,7 @@ void dpishit_wayland_helpers_surface_leave(
 	// set output priority to 0
 	backend->total_active -= 1;
 
-	size_t k = dpishit_wayland_helpers_output_index(context, output);
+	size_t k = wayland_helpers_output_index(context, output);
 
 	if (k == SIZE_MAX)
 	{
@@ -297,7 +297,7 @@ void dpishit_wayland_helpers_surface_leave(
 	}
 }
 
-void dpishit_wayland_helpers_output_geometry(
+void wayland_helpers_output_geometry(
 	void* data,
 	struct wl_output* output,
 	int32_t x,
@@ -313,7 +313,7 @@ void dpishit_wayland_helpers_output_geometry(
 	struct wayland_backend* backend = context->backend_data;
 	struct dpishit_error_info error;
 
-	size_t k = dpishit_wayland_helpers_output_index(context, output);
+	size_t k = wayland_helpers_output_index(context, output);
 
 	if (k == SIZE_MAX)
 	{
@@ -342,7 +342,7 @@ void dpishit_wayland_helpers_output_geometry(
 	}
 }
 
-void dpishit_wayland_helpers_output_mode(
+void wayland_helpers_output_mode(
 	void* data,
 	struct wl_output* output,
 	uint32_t flags,
@@ -354,7 +354,7 @@ void dpishit_wayland_helpers_output_mode(
 	struct wayland_backend* backend = context->backend_data;
 	struct dpishit_error_info error;
 
-	size_t k = dpishit_wayland_helpers_output_index(context, output);
+	size_t k = wayland_helpers_output_index(context, output);
 
 	if (k == SIZE_MAX)
 	{
@@ -366,7 +366,7 @@ void dpishit_wayland_helpers_output_mode(
 	context->display_info[k].px_height = height;
 }
 
-void dpishit_wayland_helpers_output_scale(
+void wayland_helpers_output_scale(
 	void* data,
 	struct wl_output* output,
 	int32_t scale)
@@ -375,7 +375,7 @@ void dpishit_wayland_helpers_output_scale(
 	struct wayland_backend* backend = context->backend_data;
 	struct dpishit_error_info error;
 
-	size_t k = dpishit_wayland_helpers_output_index(context, output);
+	size_t k = wayland_helpers_output_index(context, output);
 
 	if (k == SIZE_MAX)
 	{
@@ -397,7 +397,7 @@ void dpishit_wayland_helpers_output_scale(
 	}
 }
 
-void dpishit_wayland_helpers_output_done(
+void wayland_helpers_output_done(
 	void* data,
 	struct wl_output* output)
 {
@@ -406,7 +406,7 @@ void dpishit_wayland_helpers_output_done(
 	struct dpishit_error_info error;
 
 	// mark monitor as fully configured
-	size_t k = dpishit_wayland_helpers_output_index(context, output);
+	size_t k = wayland_helpers_output_index(context, output);
 
 	if (k == SIZE_MAX)
 	{
@@ -417,7 +417,7 @@ void dpishit_wayland_helpers_output_done(
 	backend->outputs[k].done = true;
 
 	// if the monitor we just configured is the current one, process event
-	size_t m = dpishit_wayland_helpers_output_index(context, backend->output_current);
+	size_t m = wayland_helpers_output_index(context, backend->output_current);
 
 	if (k == m)
 	{
