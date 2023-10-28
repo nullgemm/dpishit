@@ -1,0 +1,12 @@
+dpishit_init
+dpishit_start
+dpishit_handle_event
+dpishit_stop
+dpishit_clean
+dpishit_error_log
+dpishit_error_get_msg
+dpishit_error_get_code
+dpishit_error_get_file
+dpishit_error_get_line
+dpishit_error_ok
+dpishit_error_throw_extra
