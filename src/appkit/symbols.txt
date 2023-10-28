@@ -1,0 +1,6 @@
+dpishit_appkit_init
+dpishit_appkit_start
+dpishit_appkit_handle_event
+dpishit_appkit_stop
+dpishit_appkit_clean
+dpishit_prepare_init_appkit

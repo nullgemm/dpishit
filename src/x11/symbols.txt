@@ -1,0 +1,6 @@
+dpishit_x11_init
+dpishit_x11_start
+dpishit_x11_handle_event
+dpishit_x11_stop
+dpishit_x11_clean
+dpishit_prepare_init_x11

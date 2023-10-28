@@ -275,8 +275,6 @@ echo "\$folder_objects/\$name.local.a"; \
 echo ""; \
 } >> "$output/$ninja_file"
 
-## main targets
-
 ## special targets
 { \
 echo "# run special targets"; \
