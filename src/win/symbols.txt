@@ -1,6 +1,1 @@
-dpishit_win_init
-dpishit_win_start
-dpishit_win_handle_event
-dpishit_win_stop
-dpishit_win_clean
 dpishit_prepare_init_win
