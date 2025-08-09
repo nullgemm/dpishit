@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <wayland-client.h>
 
 struct dpishit_wayland_data
 {
@@ -14,7 +13,7 @@ struct dpishit_wayland_data
 		void* data,
 		void (*capabilities_handler)(
 			void* data,
-			struct wl_seat* seat,
+			void* seat,
 			uint32_t capabilities),
 		void* capabilities_handler_data);
 
@@ -25,7 +24,7 @@ struct dpishit_wayland_data
 		void* data,
 		void (*registry_handler)(
 			void* data,
-			struct wl_registry* registry,
+			void* registry,
 			uint32_t name,
 			const char* interface,
 			uint32_t version),
@@ -38,7 +37,7 @@ struct dpishit_wayland_data
 		void* data,
 		void (*registry_remover)(
 			void* data,
-			struct wl_registry* registry,
+			void* registry,
 			uint32_t name),
 		void* registry_remover_data);
 
@@ -54,7 +53,7 @@ struct dpishit_wayland_data
 
 void dpishit_set_wayland_surface(
 	struct dpishit* context,
-	struct wl_surface* surface,
+	void* surface,
 	struct dpishit_error_info* error);
 
 void dpishit_prepare_init_wayland(

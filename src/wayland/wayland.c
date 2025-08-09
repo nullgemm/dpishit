@@ -204,7 +204,7 @@ void dpishit_wayland_clean(
 
 void dpishit_set_wayland_surface(
 	struct dpishit* context,
-	struct wl_surface* surface,
+	void* surface,
 	struct dpishit_error_info* error)
 {
 	struct wayland_backend* backend = context->backend_data;

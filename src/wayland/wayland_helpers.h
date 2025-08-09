@@ -11,14 +11,14 @@
 // registry handler
 void wayland_helpers_registry_handler(
 	void* data,
-	struct wl_registry* registry,
+	void* registry,
 	uint32_t name,
 	const char* interface,
 	uint32_t version);
 
 void wayland_helpers_registry_remover(
 	void* data,
-	struct wl_registry* registry,
+	void* registry,
 	uint32_t name);
 
 size_t wayland_helpers_output_index(
