@@ -3,8 +3,6 @@
 
 #include "dpishit.h"
 
-#include <windows.h>
-
 struct dpishit_win_data
 {
 	void* data;
