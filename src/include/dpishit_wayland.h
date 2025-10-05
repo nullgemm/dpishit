@@ -51,6 +51,7 @@ struct dpishit_wayland_data
 	void* event_callback_data;
 };
 
+#if !defined(DPISHIT_SHARED)
 void dpishit_set_wayland_surface(
 	struct dpishit* context,
 	void* surface,
@@ -58,5 +59,6 @@ void dpishit_set_wayland_surface(
 
 void dpishit_prepare_init_wayland(
 	struct dpishit_config_backend* config);
+#endif
 
 #endif

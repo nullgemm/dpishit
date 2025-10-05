@@ -12,7 +12,9 @@ struct dpishit_x11_data
 	xcb_window_t root;
 };
 
+#if !defined(DPISHIT_SHARED)
 void dpishit_prepare_init_x11(
 	struct dpishit_config_backend* config);
+#endif
 
 #endif
